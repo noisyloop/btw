@@ -3,6 +3,7 @@
    distro/themes/fractal/ (Hyprland, waybar, walker, Alacritty), so keep the
    two in sync when a color changes. */
 :root {
+  color-scheme: dark; /* a single, dark look by design */
   --bg: #07080a;
   --surface: rgba(14, 18, 16, 0.7);
   --surface-solid: #121614;
