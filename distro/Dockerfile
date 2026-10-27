@@ -23,5 +23,5 @@ COPY --from=fetch /rootfs/ /
 RUN sed -i -e 's/^CheckSpace/#CheckSpace/' -e '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
  && pacman-key --init \
  && pacman-key --populate archlinuxarm \
- && pacman -Syu --noconfirm arch-install-scripts dosfstools mtools e2fsprogs util-linux zstd \
+ && pacman -Syu --noconfirm arch-install-scripts dosfstools mtools e2fsprogs util-linux \
  && pacman -Scc --noconfirm

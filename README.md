@@ -9,14 +9,16 @@
 <p align="center"><b>A fractal-themed Linux desktop you can try on a Mac with one download.</b><br>
 A native macOS launcher that boots btw in a VM on Apple silicon.</p>
 
-<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.img.zst"><b>btw disk image</b></a> · free and open source</p>
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · free and open source</p>
 
 <p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
 
-> Early days: the app doesn't download the disk image by itself yet. Unpack it with
-> `zstd -d btw-factory.img.zst`, then boot it with `btw run --from btw-factory.img`.
-> Until the first release is out, the latest dmg is under **Artifacts** on the most recent
-> [Build run](https://github.com/noisyloop/btw/actions/workflows/build.yml).
+> Early days: btw boots to a text console with auto-login; the desktop is next. Open
+> **btw.app** and choose **Boot btw**: the first boot downloads the btw disk image once
+> and copies it into your VM. Until the first release is out, get the dmg and
+> `btw-factory.tar.gz` from **Artifacts** on the latest
+> [Build run](https://github.com/noisyloop/btw/actions/workflows/build.yml), and choose the
+> disk image when the app asks.
 
 The current milestone is proving the hardest part: **booting a Linux VM from
 Swift on an M1**. See [docs/PLAN.md](docs/PLAN.md) for the full roadmap.
@@ -71,7 +73,7 @@ framework refuses to start a VM.
 ## Build and boot the btw factory disk
 
 ```sh
-make image     # Docker (arm64): pacstrap Arch Linux ARM -> out/btw-factory.img (+ .zst)
+make image     # Docker (arm64): pacstrap Arch Linux ARM -> out/btw-factory.img (+ .tar.gz)
 make factory   # clone it into a 32 GiB VM and boot it via EFI + systemd-boot
 ```
 

@@ -56,17 +56,18 @@ jobs:
           docker run --rm --privileged -v "$PWD:/work" btw-builder /work/distro/build.sh
           sudo chown -R "$(id -u)" out
           ls -lsh out
+      # Uploaded before the boot test so a failing image can still be inspected.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btw-factory
+          path: out/btw-factory.tar.gz
+          compression-level: 0
       - name: Boot it in QEMU; it logs in, grows its root and powers off
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq qemu-system-arm qemu-efi-aarch64 >/dev/null
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
           scripts/boot-test.py out/btw-factory.img 16
-      - uses: actions/upload-artifact@v4
-        with:
-          name: btw-factory
-          path: out/btw-factory.img.zst
-          compression-level: 0
 
   release:
     name: Release
@@ -91,5 +92,5 @@ jobs:
             echo "v$VERSION is already released; nothing to publish."
             exit 0
           fi
-          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.img.zst \
+          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "btw $VERSION" --generate-notes --latest

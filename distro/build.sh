@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds out/btw-factory.img (+ .zst) inside the builder container:
+# Builds out/btw-factory.img (+ btw-factory.tar.gz) inside the builder container:
 #   GPT disk = ESP (systemd-boot, kernel, initramfs) + ext4 root.
 # Filesystems are populated with mkfs.ext4 -d / mtools, so no loop devices are
 # needed; --privileged is only for pacstrap/arch-chroot mounts.
@@ -81,6 +81,8 @@ dd if="$work/esp.img" of="$img" bs=1M seek=1 conv=notrunc,sparse status=none
 dd if="$work/root.img" of="$img" bs=1M seek=$((1 + esp_mib)) conv=notrunc,sparse status=none
 
 cp --sparse=always "$img" "$out/btw-factory.img"
-zstd -q -T0 -f "$out/btw-factory.img" -o "$out/btw-factory.img.zst"
+# A sparse tar.gz: macOS's built-in tar unpacks it (zstd isn't on a stock Mac)
+# and recreates the holes, so the unpacked image stays small on disk.
+tar --sparse -czf "$out/btw-factory.tar.gz" -C "$out" btw-factory.img
 echo "built $out/btw-factory.img ($(du -h "$out/btw-factory.img" | cut -f1) used, ${size_gib}G virtual)"
-echo "built $out/btw-factory.img.zst ($(du -h "$out/btw-factory.img.zst" | cut -f1))"
+echo "built $out/btw-factory.tar.gz ($(du -h "$out/btw-factory.tar.gz" | cut -f1))"
