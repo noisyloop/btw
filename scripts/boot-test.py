@@ -39,7 +39,10 @@ def main():
     if os.access("/dev/kvm", os.R_OK | os.W_OK):
         accel, timeout = ["-accel", "kvm", "-cpu", "host"], 300
     else:
-        accel, timeout = ["-accel", "tcg", "-cpu", "max"], 1500
+        # Not "-cpu max": it adds features an M1 lacks (FEAT_MOPS), and QEMU's
+        # emulation of MOPS memset crashed the kernel while loading modules.
+        # A Neoverse N1 is closer to Apple silicon and faster to emulate.
+        accel, timeout = ["-accel", "tcg", "-cpu", "neoverse-n1"], 1500
     print(f"booting with {accel[1]}, timeout {timeout}s", flush=True)
 
     qemu = subprocess.Popen([
