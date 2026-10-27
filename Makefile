@@ -22,7 +22,7 @@ gui: build
 	scripts/fetch-iso.sh $(CACHE)/iso
 	$(BTW) run --name gui --iso $(CACHE)/iso/debian-arm64-netinst.iso
 
-# The btw factory disk: pacstrap Arch Linux ARM in Docker -> out/btw-factory.img(.zst).
+# The btw factory disk: pacstrap Arch Linux ARM in Docker -> out/btw-factory.img (+ .tar.gz).
 image:
 	docker build --platform linux/arm64 -t btw-builder distro
 	docker run --rm --privileged --platform linux/arm64 -v "$(CURDIR)":/work btw-builder /work/distro/build.sh

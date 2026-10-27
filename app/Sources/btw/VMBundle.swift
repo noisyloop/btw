@@ -42,6 +42,24 @@ struct VMBundle {
         }
     }
 
+    /// True when the disk has a GPT partition table, meaning a system was
+    /// installed or cloned onto it, rather than an empty disk from a failed start.
+    var hasPartitionedDisk: Bool {
+        guard let handle = try? FileHandle(forReadingFrom: diskURL) else { return false }
+        defer { try? handle.close() }
+        guard (try? handle.seek(toOffset: 512)) != nil,
+              let signature = try? handle.read(upToCount: 8)
+        else { return false }
+        return signature == Data("EFI PART".utf8)
+    }
+
+    /// Removes the disk and its EFI variables so the next start creates them fresh.
+    func removeDisk() throws {
+        for url in [diskURL, efiVariablesURL] where FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+    }
+
     /// The guest sees the same hardware identity on every boot, which keeps
     /// EFI boot entries and machine-specific state valid.
     func machineIdentifier() throws -> VZGenericMachineIdentifier {
