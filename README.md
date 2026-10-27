@@ -48,6 +48,20 @@ walker, the tiling for Hyprland and the terminal for Alacritty. The palette live
 `desktop/theme.css`, and the matching configs for the real desktop are in
 `distro/themes/fractal/`, so either can become the GUI later.
 
+## Build it yourself
+
+No GitHub Actions needed: one script builds everything on your Mac and boots it.
+
+```sh
+git clone https://github.com/noisyloop/btw.git
+cd btw
+./build-local.sh          # app + disk image, then boot it (run it again later to update)
+```
+
+You need Apple's command line tools (the script offers to install them) and, for the disk
+image, Docker Desktop or OrbStack running. `./build-local.sh app`, `image` or `boot` do one
+step at a time.
+
 ## Requirements
 
 - An Apple silicon Mac (M1 or newer) on macOS 13 Ventura or newer
