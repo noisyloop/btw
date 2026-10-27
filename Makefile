@@ -1,7 +1,7 @@
 BTW := app/.build/release/btw
 CACHE := .cache
 
-.PHONY: build smoke gui image boot-test factory dmg clean
+.PHONY: build smoke gui image boot-test factory dmg preview clean
 
 # Builds the launcher and ad-hoc signs it with the virtualization entitlement;
 # without the entitlement, Virtualization.framework refuses to start a VM.
@@ -38,6 +38,10 @@ factory: build
 # btw.app + btw-macos.dmg in dist/ (icon from assets/AppIcon.png if present).
 dmg:
 	scripts/package.sh
+
+# Browser preview of the btw desktop (no VM needed).
+preview:
+	open desktop/index.html 2>/dev/null || xdg-open desktop/index.html
 
 clean:
 	rm -rf app/.build dist out

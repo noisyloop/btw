@@ -1,0 +1,40 @@
+# btw fractal theme: Alacritty. Mirrors desktop/theme.css.
+[window]
+opacity = 0.9
+padding = { x = 12, y = 10 }
+
+[font]
+normal = { family = "IBM Plex Mono" }
+size = 11
+
+[colors.primary]
+background = "#0e1210"
+foreground = "#e7efe9"
+
+[colors.cursor]
+cursor = "#3ddc97"
+text = "#07080a"
+
+[colors.selection]
+background = "#24302a"
+foreground = "#e7efe9"
+
+[colors.normal]
+black = "#07080a"
+red = "#ef6f6c"
+green = "#3ddc97"
+yellow = "#e8a24a"
+blue = "#1793d1"
+magenta = "#c77dff"
+cyan = "#4fd6d0"
+white = "#e7efe9"
+
+[colors.bright]
+black = "#8b978f"
+red = "#ef6f6c"
+green = "#3ddc97"
+yellow = "#e8a24a"
+blue = "#1793d1"
+magenta = "#c77dff"
+cyan = "#4fd6d0"
+white = "#ffffff"

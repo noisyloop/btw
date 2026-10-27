@@ -69,6 +69,11 @@ ready-made disk. So:
       (start/stop/reset), and settings for CPU, memory and shared folders.
 - [ ] **M4: graphics.** Measure llvmpipe performance and decide whether to
       prototype the QEMU + virgl backend.
+- [ ] **Desktop.** Omarchy-style: Hyprland, waybar, walker (app menu),
+      Alacritty and mako, themed from `distro/themes/fractal/`. A browser
+      preview already exists in `desktop/`. It shares the palette with those
+      configs and shows the target layout: tiling, the app menu, a terminal
+      at login and a live fractal wallpaper.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
 - [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
