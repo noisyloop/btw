@@ -1,7 +1,7 @@
 BTW := app/.build/release/btw
 CACHE := .cache
 
-.PHONY: build smoke gui image factory dmg clean
+.PHONY: build smoke gui image boot-test factory dmg clean
 
 # Builds the launcher and ad-hoc signs it with the virtualization entitlement;
 # without the entitlement, Virtualization.framework refuses to start a VM.
@@ -27,11 +27,15 @@ image:
 	docker build --platform linux/arm64 -t btw-builder distro
 	docker run --rm --privileged --platform linux/arm64 -v "$(CURDIR)":/work btw-builder /work/distro/build.sh
 
+# Linux + QEMU: boot the image and check it logs in, grows its root and powers off.
+boot-test:
+	scripts/boot-test.py out/btw-factory.img 16
+
 # Boot a VM cloned from the factory disk (first run clones; later runs reuse it).
 factory: build
 	$(BTW) run --name factory --from out/btw-factory.img --disk 32
 
-# btw.app + btw.dmg in dist/ (icon from assets/AppIcon.png if present).
+# btw.app + btw-macos.dmg in dist/ (icon from assets/AppIcon.png if present).
 dmg:
 	scripts/package.sh
 

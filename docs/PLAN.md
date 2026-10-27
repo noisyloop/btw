@@ -71,5 +71,8 @@ ready-made disk. So:
       prototype the QEMU + virgl backend.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
-- [ ] **M5: ship.** Developer ID signing, notarization, a `.dmg`, an update
-      channel for new factory disks, and CI that builds the image and the app.
+- [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
+      factory disk, boot-tests the disk in QEMU, and publishes a release when
+      the version in `app/Info.plist` changes.
+- [ ] **M5: ship.** Developer ID signing and notarization, and an app that
+      downloads the latest factory disk from releases on first run.

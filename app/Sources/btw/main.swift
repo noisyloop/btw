@@ -1,7 +1,9 @@
 import Foundation
+import Virtualization
 
 let usage = """
 usage: btw run [options]
+       btw check           exit 0 if this Mac can run VMs
 
 Boot options (pick one; with neither, boots the VM's existing disk via EFI):
   --iso PATH          attach an arm64 installer ISO and boot it via EFI
@@ -52,6 +54,11 @@ var arguments = launchArguments.makeIterator()
 switch arguments.next() {
 case "run":
     break
+case "check":
+    // Used by CI: hosted Mac runners are VMs themselves and can't nest one.
+    let supported = VZVirtualMachine.isSupported
+    print(supported ? "virtualization: supported" : "virtualization: not supported on this machine")
+    exit(supported ? 0 : 2)
 case "-h", "--help", "help":
     print(usage)
     exit(0)

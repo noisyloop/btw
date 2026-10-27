@@ -5,10 +5,21 @@
 <!-- Temporary fractal banner. Regenerate with scripts/fractal-banner.py;
      it will be replaced by the real fractal identity (docs/PLAN.md). -->
 
-# btw
+<h1 align="center">btw</h1>
 
-A fractal-themed Linux desktop you can try on a Mac with one download: a native macOS
-launcher that boots a btw VM on Apple silicon.
+<p align="center">
+  <a href="https://github.com/noisyloop/btw/actions/workflows/build.yml"><img src="https://github.com/noisyloop/btw/actions/workflows/build.yml/badge.svg?branch=main" alt="Build status"></a>
+  <a href="https://github.com/noisyloop/btw/releases/latest"><img src="https://img.shields.io/github/v/release/noisyloop/btw?label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20(Apple%20silicon)-blue" alt="macOS on Apple silicon">
+</p>
+
+<p align="center"><b>A fractal-themed Linux desktop you can try on a Mac with one download.</b><br>
+A native macOS launcher that boots btw in a VM on Apple silicon.</p>
+
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.img.zst"><b>btw disk image</b></a> · free and open source</p>
+
+> Early days: the app doesn't download the disk image by itself yet. Unpack it with
+> `zstd -d btw-factory.img.zst`, then boot it with `btw run --from btw-factory.img`.
 
 The current milestone is proving the hardest part: **booting a Linux VM from
 Swift on an M1**. See [docs/PLAN.md](docs/PLAN.md) for the full roadmap.
@@ -49,10 +60,28 @@ whatever disk size the launcher gives the VM. It logs in automatically as `btw`
 (password `btw`) on both the window and the serial console. Packages are listed
 in `distro/packages.txt`, and config files are overlaid from `distro/rootfs/`.
 
+On Linux (arm64 or x86-64 with QEMU installed), `make boot-test` boots the
+built image in QEMU and checks that it logs in, grows its root and powers off.
+
+## How it's built and released
+
+Like [Fleet-51](https://github.com/noisyloop/Fleet-51), one GitHub Actions
+workflow (`.github/workflows/build.yml`) does everything:
+
+- **macOS app:** builds, signs and packages `btw-macos.dmg` on an Apple silicon
+  runner, then checks its signature and entitlement. Hosted Mac runners can't
+  run VMs inside themselves, so the launcher's boot test runs only where
+  `btw check` passes.
+- **Factory disk:** builds `btw-factory.img` on an arm64 Linux runner and
+  boot-tests it in QEMU.
+- **Release:** bump `CFBundleShortVersionString` in `app/Info.plist` and merge
+  to main. CI then publishes `v<version>` with both files, and the download
+  links above point to it.
+
 ## Package as an app
 
 ```sh
-make dmg   # dist/btw.app and dist/btw.dmg, ad-hoc signed
+make dmg   # dist/btw.app and dist/btw-macos.dmg, ad-hoc signed
 ```
 
 Drop a 1024×1024 `assets/AppIcon.png` in place to get an app icon. Double-clicking
@@ -81,9 +110,10 @@ binaries can run in the arm64 guest.
 ## Layout
 
 ```
+.github/    CI: build, test and release (dmg + disk image)
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
 assets/     fractal art (the README banner is a temporary placeholder)
-scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, generate the banner
+scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests, generate the banner
 docs/       plan and design notes
 ```
