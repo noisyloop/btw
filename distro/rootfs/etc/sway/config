@@ -1,0 +1,68 @@
+# btw desktop: Sway with the fractal theme (palette from distro/themes/fractal).
+# Super is the Mac's Command key inside the VM window.
+
+set $mod Mod4
+set $term foot
+set $menu fuzzel
+
+font pango:IBM Plex Sans 10
+output * bg /usr/share/backgrounds/btw/fractal.png fill
+input type:keyboard xkb_layout us
+
+default_border pixel 2
+default_floating_border pixel 2
+gaps inner 5
+gaps outer 10
+smart_gaps off
+
+#                       border  background text    indicator child_border
+client.focused          #3ddc97 #121614    #e7efe9 #e8a24a   #3ddc97
+client.focused_inactive #24302a #07080a    #8b978f #24302a   #24302a
+client.unfocused        #24302a #07080a    #8b978f #24302a   #24302a
+client.urgent           #e8a24a #07080a    #e7efe9 #e8a24a   #e8a24a
+
+bar {
+    swaybar_command waybar
+}
+
+# Apps
+bindsym $mod+Return exec $term
+bindsym $mod+space exec $menu
+bindsym $mod+d exec $menu
+bindsym $mod+b exec firefox
+bindsym $mod+e exec thunar
+
+# Windows
+bindsym $mod+w kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+t floating toggle
+bindsym $mod+Left focus left
+bindsym $mod+Right focus right
+bindsym $mod+Up focus up
+bindsym $mod+Down focus down
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Right move right
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Down move down
+floating_modifier $mod normal
+
+# Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+
+# Session
+bindsym $mod+Shift+r reload
+bindsym $mod+Shift+e exec swaymsg exit
+
+exec mako --config /etc/xdg/mako/config
+exec $term sh -c 'fastfetch; exec bash'
+
+include /etc/sway/config.d/*

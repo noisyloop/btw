@@ -23,6 +23,11 @@ pacstrap -c "$root" "${packages[@]}"
 # Plain -r so files end up owned by root, not by whoever owns the checkout.
 cp -r "$src/rootfs/." "$root/"
 chmod 0440 "$root/etc/sudoers.d/wheel"
+# The desktop theme: waybar's style and the fractal wallpaper.
+install -Dm644 "$src/themes/fractal/waybar.css" "$root/etc/xdg/waybar/style.css"
+install -Dm644 "$src/themes/fractal/wallpaper.png" "$root/usr/share/backgrounds/btw/fractal.png"
+mkdir -p "$root/usr/share/btw/themes"
+cp -r "$src/themes/fractal" "$root/usr/share/btw/themes/"
 
 arch-chroot "$root" /bin/bash -euxo pipefail <<'CHROOT'
 sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf

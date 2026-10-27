@@ -22,8 +22,15 @@ enum FactoryImage {
         return url
     }
 
+    /// Each app version boots the image from its own release, so the cache is
+    /// keyed by version: a new app downloads its image once instead of reusing
+    /// an older one.
+    static var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+    }
+
     static func imageURL() throws -> URL {
-        try directory().appendingPathComponent("btw-factory.img")
+        try directory().appendingPathComponent("btw-factory-\(version).img")
     }
 
     /// Returns the unpacked factory image, downloading it first if needed.
@@ -95,7 +102,19 @@ enum FactoryImage {
         try? FileManager.default.removeItem(at: image)
         try FileManager.default.moveItem(at: unpacked, to: image)
         if deleteArchive { try? FileManager.default.removeItem(at: archive) }
+        removeOlderImages(keeping: image)
         return image
+    }
+
+    /// Existing VMs hold their own copy-on-write clones, so older cached
+    /// images can go without affecting them.
+    private static func removeOlderImages(keeping current: URL) {
+        guard let directory = try? directory(),
+              let names = try? FileManager.default.contentsOfDirectory(atPath: directory.path)
+        else { return }
+        for name in names where name.hasPrefix("btw-factory") && name.hasSuffix(".img") && name != current.lastPathComponent {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
+        }
     }
 }
 

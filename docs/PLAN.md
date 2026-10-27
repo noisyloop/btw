@@ -69,8 +69,10 @@ ready-made disk. So:
       (start/stop/reset), and settings for CPU, memory and shared folders.
 - [ ] **M4: graphics.** Measure llvmpipe performance and decide whether to
       prototype the QEMU + virgl backend.
-- [ ] **Desktop.** Omarchy-style: Hyprland, waybar, walker (app menu),
-      Alacritty and mako, themed from `distro/themes/fractal/`. A browser
+- [ ] **Desktop.** A first version ships: Sway (CPU rendering), waybar, fuzzel
+      (app menu), foot, mako, Firefox, Thunar and Mousepad with the fractal
+      theme and wallpaper. Next: Omarchy-style Hyprland, walker and Alacritty
+      once graphics allow (M4), themed from `distro/themes/fractal/`. A browser
       preview already exists in `desktop/`. It shares the palette with those
       configs and shows the target layout: tiling, the app menu, a terminal
       at login and a live fractal wallpaper.

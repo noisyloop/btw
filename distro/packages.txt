@@ -7,3 +7,19 @@ sudo
 openssh
 less
 vim
+
+# Desktop. The VM has no GPU acceleration, so the session is Sway (wlroots can
+# render on the CPU with pixman); Hyprland needs GLES and comes later.
+sway
+swaybg
+waybar
+foot
+fuzzel
+mako
+firefox
+thunar
+mousepad
+fastfetch
+btop
+ttf-ibm-plex
+ttf-dejavu
