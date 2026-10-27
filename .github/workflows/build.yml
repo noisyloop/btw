@@ -1,0 +1,95 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    # Changes to documentation alone don't need a build.
+    paths-ignore: ["**.md", "docs/**"]
+  pull_request:
+    paths-ignore: ["**.md", "docs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS app (.dmg)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, sign and package btw.app into btw-macos.dmg
+        run: scripts/package.sh
+      - name: Check the packaged app
+        run: |
+          hdiutil attach dist/btw-macos.dmg -mountpoint /tmp/btw-dmg -nobrowse
+          APP=/tmp/btw-dmg/btw.app
+          codesign --verify --strict "$APP"
+          codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.security.virtualization \
+            || { echo "the virtualization entitlement is missing"; exit 1; }
+          lipo -info "$APP/Contents/MacOS/btw"
+          "$APP/Contents/MacOS/btw" --help
+          hdiutil detach /tmp/btw-dmg
+      - name: Boot a Linux kernel with the launcher (when the runner can run VMs)
+        run: |
+          BTW=dist/btw.app/Contents/MacOS/btw
+          if "$BTW" check; then
+            scripts/smoke-mac.sh "$BTW"
+          else
+            echo "::notice::This runner can't run VMs (no nested virtualization), so the launcher boot test was skipped. Run make smoke on an Apple silicon Mac."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btw-macos
+          path: dist/btw-macos.dmg
+
+  image:
+    name: Factory disk (arm64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the builder image (Arch Linux ARM)
+        run: docker build -t btw-builder distro
+      - name: Pacstrap and assemble btw-factory.img
+        run: |
+          docker run --rm --privileged -v "$PWD:/work" btw-builder /work/distro/build.sh
+          sudo chown -R "$(id -u)" out
+          ls -lsh out
+      - name: Boot it in QEMU; it logs in, grows its root and powers off
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-arm qemu-efi-aarch64 >/dev/null
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+          scripts/boot-test.py out/btw-factory.img 16
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btw-factory
+          path: out/btw-factory.img.zst
+          compression-level: 0
+
+  release:
+    name: Release
+    needs: [macos, image]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: btw-*
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      # Bumping CFBundleShortVersionString in app/Info.plist and merging to main publishes it.
+      - name: Publish a release when main has a new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -A1 CFBundleShortVersionString app/Info.plist | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$VERSION is already released; nothing to publish."
+            exit 0
+          fi
+          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.img.zst \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "btw $VERSION" --generate-notes --latest

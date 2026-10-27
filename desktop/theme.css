@@ -1,0 +1,33 @@
+/* btw "fractal" theme tokens for the desktop preview.
+   The same palette drives the real desktop's configs in
+   distro/themes/fractal/ (Hyprland, waybar, walker, Alacritty), so keep the
+   two in sync when a color changes. */
+:root {
+  color-scheme: dark; /* a single, dark look by design */
+  --bg: #07080a;
+  --surface: rgba(14, 18, 16, 0.7);
+  --surface-solid: #121614;
+  --surface-raised: #18201c;
+  --fg: #e7efe9;
+  --muted: #8b978f;
+  --line: #24302a;
+  --accent: #3ddc97; /* mint: focus, selection, prompts */
+  --amber: #e8a24a; /* warm counterpoint: highlights, warnings */
+
+  /* Terminal ANSI colors */
+  --ansi-red: #ef6f6c;
+  --ansi-green: #3ddc97;
+  --ansi-yellow: #e8a24a;
+  --ansi-blue: #1793d1;
+  --ansi-magenta: #c77dff;
+  --ansi-cyan: #4fd6d0;
+
+  --font-display: "Syne", "Avenir Next", sans-serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --gap: 10px; /* Hyprland gaps_out */
+  --radius: 10px; /* Hyprland rounding */
+  --border: 2px; /* Hyprland border_size */
+  --bar-height: 34px;
+}

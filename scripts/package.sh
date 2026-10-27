@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds dist/btw.app and dist/btw.dmg: release build, optional icon from
+# Builds dist/btw.app and dist/btw-macos.dmg: release build, optional icon from
 # assets/AppIcon.png (1024x1024), ad-hoc signature with the virtualization
 # entitlement. The VM disk is not inside the dmg; it comes from the distro build.
 set -euo pipefail
@@ -12,7 +12,7 @@ version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$root
 swift build -c release --arch arm64 --package-path "$root/app"
 bin="$(swift build -c release --arch arm64 --package-path "$root/app" --show-bin-path)/btw"
 
-rm -rf "$app" "$dist/btw.dmg"
+rm -rf "$app" "$dist/btw-macos.dmg"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin" "$app/Contents/MacOS/btw"
 cp "$root/app/Info.plist" "$app/Contents/Info.plist"
@@ -35,8 +35,8 @@ codesign --verify --strict "$app"
 staging="$(mktemp -d)"
 cp -R "$app" "$staging/"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "btw $version" -srcfolder "$staging" -format UDZO -ov "$dist/btw.dmg" >/dev/null
+hdiutil create -volname "btw $version" -srcfolder "$staging" -format UDZO -ov "$dist/btw-macos.dmg" >/dev/null
 rm -rf "$staging"
 
 echo "built $app"
-echo "built $dist/btw.dmg ($(du -h "$dist/btw.dmg" | cut -f1))"
+echo "built $dist/btw-macos.dmg ($(du -h "$dist/btw-macos.dmg" | cut -f1))"

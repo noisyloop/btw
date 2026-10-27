@@ -1,0 +1,35 @@
+/* btw fractal theme: walker (the app menu). Mirrors desktop/theme.css. */
+@define-color background #0e1210;
+@define-color surface #18201c;
+@define-color foreground #e7efe9;
+@define-color muted #8b978f;
+@define-color line #24302a;
+@define-color accent #3ddc97;
+@define-color amber #e8a24a;
+
+#window,
+#box {
+  background: alpha(@background, 0.94);
+  color: @foreground;
+  border: 2px solid @accent;
+  border-radius: 14px;
+}
+
+#search {
+  background: transparent;
+  color: @foreground;
+  border-bottom: 1px solid @line;
+  font-size: 17px;
+}
+
+child {
+  border-radius: 9px;
+}
+
+child:selected {
+  background: alpha(@accent, 0.13);
+}
+
+#sub {
+  color: @muted;
+}

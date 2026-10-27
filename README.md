@@ -5,13 +5,50 @@
 <!-- Temporary fractal banner. Regenerate with scripts/fractal-banner.py;
      it will be replaced by the real fractal identity (docs/PLAN.md). -->
 
-# btw
+<h1 align="center">btw</h1>
 
-A fractal-themed Linux desktop you can try on a Mac with one download: a native macOS
-launcher that boots a btw VM on Apple silicon.
+<p align="center">
+  <a href="https://github.com/noisyloop/btw/actions/workflows/build.yml"><img src="https://github.com/noisyloop/btw/actions/workflows/build.yml/badge.svg?branch=main" alt="Build status"></a>
+  <a href="https://github.com/noisyloop/btw/releases/latest"><img src="https://img.shields.io/github/v/release/noisyloop/btw?label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20(Apple%20silicon)-blue" alt="macOS on Apple silicon">
+</p>
+
+<p align="center"><b>A fractal-themed Linux desktop you can try on a Mac with one download.</b><br>
+A native macOS launcher that boots btw in a VM on Apple silicon.</p>
+
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.img.zst"><b>btw disk image</b></a> · free and open source</p>
+
+> Early days: the app doesn't download the disk image by itself yet. Unpack it with
+> `zstd -d btw-factory.img.zst`, then boot it with `btw run --from btw-factory.img`.
 
 The current milestone is proving the hardest part: **booting a Linux VM from
 Swift on an M1**. See [docs/PLAN.md](docs/PLAN.md) for the full roadmap.
+
+## Desktop preview
+
+<p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
+
+Until the VM desktop is ready, `desktop/` is a preview of what it will look like. It runs in any
+browser: open `desktop/index.html` (or `make preview`). It boots with a terminal open and
+includes:
+
+- **A live wallpaper:** a raymarched 3D fractal (mandelbox, mandelbulb, Sierpinski or Menger)
+  that orbits slowly. Change it from the Fractals app or with `fractal list` in the terminal.
+- **A terminal:** bash-like, with `fastfetch`, `ls`, `cd`, `cat`, `pacman -Syu` and more.
+  Type `help` for the full list.
+- **The app menu:** <kbd>Super</kbd>+<kbd>Space</kbd>, <kbd>Ctrl</kbd>+<kbd>Space</kbd> or the
+  **btw** button. Search apps, filter by category, and lock, restart or shut down.
+- **Tiling windows and keybindings, as in Omarchy:** <kbd>Super</kbd>+<kbd>Enter</kbd> opens a
+  terminal, <kbd>Super</kbd>+<kbd>W</kbd> closes a window, and <kbd>Super</kbd>+<kbd>1</kbd>
+  to <kbd>5</kbd> switch workspaces. <kbd>Alt</kbd> works in place of <kbd>Super</kbd> where
+  the OS keeps that key.
+
+<p align="center"><img src="docs/screenshots/menu.png" alt="The btw app menu" width="640"></p>
+
+The preview is laid out like an Omarchy desktop. The bar stands in for waybar, the menu for
+walker, the tiling for Hyprland and the terminal for Alacritty. The palette lives in
+`desktop/theme.css`, and the matching configs for the real desktop are in
+`distro/themes/fractal/`, so either can become the GUI later.
 
 ## Requirements
 
@@ -49,10 +86,28 @@ whatever disk size the launcher gives the VM. It logs in automatically as `btw`
 (password `btw`) on both the window and the serial console. Packages are listed
 in `distro/packages.txt`, and config files are overlaid from `distro/rootfs/`.
 
+On Linux (arm64 or x86-64 with QEMU installed), `make boot-test` boots the
+built image in QEMU and checks that it logs in, grows its root and powers off.
+
+## How it's built and released
+
+Like [Fleet-51](https://github.com/noisyloop/Fleet-51), one GitHub Actions
+workflow (`.github/workflows/build.yml`) does everything:
+
+- **macOS app:** builds, signs and packages `btw-macos.dmg` on an Apple silicon
+  runner, then checks its signature and entitlement. Hosted Mac runners can't
+  run VMs inside themselves, so the launcher's boot test runs only where
+  `btw check` passes.
+- **Factory disk:** builds `btw-factory.img` on an arm64 Linux runner and
+  boot-tests it in QEMU.
+- **Release:** bump `CFBundleShortVersionString` in `app/Info.plist` and merge
+  to main. CI then publishes `v<version>` with both files, and the download
+  links above point to it.
+
 ## Package as an app
 
 ```sh
-make dmg   # dist/btw.app and dist/btw.dmg, ad-hoc signed
+make dmg   # dist/btw.app and dist/btw-macos.dmg, ad-hoc signed
 ```
 
 Drop a 1024×1024 `assets/AppIcon.png` in place to get an app icon. Double-clicking
@@ -81,9 +136,11 @@ binaries can run in the arm64 guest.
 ## Layout
 
 ```
-distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay
+desktop/    browser preview of the btw desktop (temporary)
+.github/    CI: build, test and release (dmg + disk image)
+distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
 assets/     fractal art (the README banner is a temporary placeholder)
-scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, generate the banner
+scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests, generate the banner
 docs/       plan and design notes
 ```

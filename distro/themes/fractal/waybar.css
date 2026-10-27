@@ -1,0 +1,42 @@
+/* btw fractal theme: waybar. Mirrors desktop/theme.css. */
+@define-color background #07080a;
+@define-color surface #121614;
+@define-color foreground #e7efe9;
+@define-color muted #8b978f;
+@define-color line #24302a;
+@define-color accent #3ddc97;
+@define-color amber #e8a24a;
+
+* {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12.5px;
+}
+
+window#waybar {
+  background: alpha(@background, 0.72);
+  color: @foreground;
+  border-bottom: 1px solid @line;
+}
+
+#workspaces button {
+  color: @muted;
+  border-radius: 6px;
+  padding: 0 8px;
+}
+
+#workspaces button.active {
+  background: @accent;
+  color: @background;
+}
+
+#cpu,
+#memory,
+#network {
+  color: @foreground;
+  padding: 0 8px;
+}
+
+#clock {
+  color: @amber;
+  padding: 0 10px;
+}

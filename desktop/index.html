@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>btw desktop</title>
+    <meta name="description" content="A preview of the btw desktop: tiled windows, an app menu and a terminal over a live fractal wallpaper." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@700&display=swap"
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="desktop.css" />
+  </head>
+  <body>
+    <canvas id="wallpaper" aria-hidden="true"></canvas>
+
+    <header class="bar">
+      <div class="bar-left">
+        <button class="menu-button" id="menu-button" aria-haspopup="dialog" aria-expanded="false" title="Apps (Super+Space)">
+          <span id="menu-logo"></span>btw
+        </button>
+        <nav class="workspaces" id="workspaces" aria-label="Workspaces"></nav>
+      </div>
+      <div class="bar-title" id="bar-title"></div>
+      <div class="bar-right">
+        <span class="bar-module hide-narrow" id="bar-cpu" title="CPU"></span>
+        <span class="bar-module hide-narrow" id="bar-mem" title="Memory"></span>
+        <span class="bar-module hide-narrow" id="bar-net" title="Network"></span>
+        <span class="bar-module clock" id="bar-clock"></span>
+      </div>
+    </header>
+
+    <main id="tiles" aria-label="Windows"></main>
+
+    <div class="launcher-backdrop" id="launcher" hidden>
+      <div class="launcher" role="dialog" aria-modal="true" aria-label="Apps">
+        <div class="launcher-head">
+          <span id="launcher-logo"></span>
+          <input
+            class="launcher-search"
+            id="launcher-search"
+            type="text"
+            placeholder="Search apps and actions…"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="launcher-list"
+          />
+        </div>
+        <div class="launcher-cats" id="launcher-cats" role="tablist" aria-label="Categories"></div>
+        <ul class="launcher-list" id="launcher-list" role="listbox" aria-label="Results"></ul>
+        <div class="launcher-foot">
+          <span><b>↑↓</b> choose</span>
+          <span><b>Enter</b> open</span>
+          <span><b>Esc</b> close</span>
+          <span><b>Super+Enter</b> terminal</span>
+          <span><b>Super+W</b> close window</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay lock" id="lock" hidden tabindex="-1">
+      <div class="big-clock" id="lock-clock"></div>
+      <div class="date" id="lock-date"></div>
+      <div class="hint">click or press any key to unlock</div>
+    </div>
+
+    <div class="overlay power" id="power" hidden></div>
+
+    <script src="wallpaper.js"></script>
+    <script src="desktop.js"></script>
+  </body>
+</html>
