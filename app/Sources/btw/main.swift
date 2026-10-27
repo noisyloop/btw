@@ -14,6 +14,8 @@ VM options:
   --cpus N            virtual CPUs (default: half the host's cores, min 2)
   --memory GiB        memory size (default: 4)
   --disk GiB          size of a newly created disk (default: 32; ignored if it exists)
+  --from IMAGE        create the VM's disk as a clone of a raw image, such as
+                      out/btw-factory.img (ignored if the disk exists)
   --share DIR         share a host directory (repeatable); mount in the guest with
                       `mount -t virtiofs btw /mnt/btw`
   --headless          no window; wire the serial console to this terminal
@@ -73,6 +75,7 @@ var iso: URL?
 var kernel: URL?
 var initrd: URL?
 var cmdline = "console=hvc0"
+var template: URL?
 
 while let arg = arguments.next() {
     switch arg {
@@ -84,6 +87,7 @@ while let arg = arguments.next() {
     case "--cpus": options.cpus = number(for: arg)
     case "--memory": options.memoryGiB = UInt64(number(for: arg))
     case "--disk": options.diskGiB = UInt64(number(for: arg))
+    case "--from": template = existingFile(value(for: arg))
     case "--share": options.shares.append(existingFile(value(for: arg)))
     case "--headless": options.headless = true
     case "-h", "--help":
@@ -104,7 +108,7 @@ if let kernel {
 
 do {
     let bundle = try VMBundle(name: options.name)
-    try bundle.ensureDisk(sizeGiB: options.diskGiB)
+    try bundle.ensureDisk(sizeGiB: options.diskGiB, from: template)
     let console = try SerialConsole(headless: options.headless, logURL: bundle.consoleLogURL)
     let configuration = try makeConfiguration(options: options, bundle: bundle, serial: console.attachment)
     try configuration.validate()

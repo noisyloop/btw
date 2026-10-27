@@ -25,15 +25,21 @@ struct VMBundle {
     var machineIdentifierURL: URL { url.appendingPathComponent("machine-id") }
     var consoleLogURL: URL { url.appendingPathComponent("console.log") }
 
-    /// Creates a sparse raw disk image; APFS only allocates blocks the guest writes.
-    func ensureDisk(sizeGiB: UInt64) throws {
+    /// Creates the VM's raw disk image if it doesn't exist yet: a clone of `template`
+    /// (instant and copy-on-write on APFS) or an empty disk, grown sparsely to
+    /// `sizeGiB`. The guest grows its root partition into the new space on first boot.
+    func ensureDisk(sizeGiB: UInt64, from template: URL? = nil) throws {
         guard !FileManager.default.fileExists(atPath: diskURL.path) else { return }
-        guard FileManager.default.createFile(atPath: diskURL.path, contents: nil) else {
+        if let template {
+            try FileManager.default.copyItem(at: template, to: diskURL)
+        } else if !FileManager.default.createFile(atPath: diskURL.path, contents: nil) {
             throw BTWError("could not create \(diskURL.path)")
         }
         let handle = try FileHandle(forWritingTo: diskURL)
         defer { try? handle.close() }
-        try handle.truncate(atOffset: sizeGiB << 30)
+        if try handle.seekToEnd() < sizeGiB << 30 {
+            try handle.truncate(atOffset: sizeGiB << 30)
+        }
     }
 
     /// The guest sees the same hardware identity on every boot, which keeps

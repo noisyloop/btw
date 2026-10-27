@@ -1,6 +1,13 @@
+<p align="center">
+  <img src="assets/fractal-banner.svg" alt="btw: a fractal tree growing branch by branch" width="720">
+</p>
+
+<!-- Temporary fractal banner. Regenerate with scripts/fractal-banner.py;
+     it will be replaced by the real fractal identity (docs/PLAN.md). -->
+
 # btw
 
-A Linux desktop you can try on a Mac with one download: a native macOS
+A fractal-themed Linux desktop you can try on a Mac with one download: a native macOS
 launcher that boots a btw VM on Apple silicon.
 
 The current milestone is proving the hardest part: **booting a Linux VM from
@@ -28,6 +35,19 @@ make gui
 `make build` alone produces `app/.build/release/btw`, ad-hoc signed with the
 `com.apple.security.virtualization` entitlement. Without that entitlement the
 framework refuses to start a VM.
+
+## Build and boot the btw factory disk
+
+```sh
+make image     # Docker (arm64): pacstrap Arch Linux ARM -> out/btw-factory.img (+ .zst)
+make factory   # clone it into a 32 GiB VM and boot it via EFI + systemd-boot
+```
+
+The factory disk is a GPT image: an ESP with systemd-boot, the kernel and the
+initramfs (mounted at `/boot`), and an ext4 root that grows itself to fill
+whatever disk size the launcher gives the VM. It logs in automatically as `btw`
+(password `btw`) on both the window and the serial console. Packages are listed
+in `distro/packages.txt`, and config files are overlaid from `distro/rootfs/`.
 
 ## Package as an app
 
@@ -61,7 +81,9 @@ binaries can run in the arm64 guest.
 ## Layout
 
 ```
+distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
-scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg
+assets/     fractal art (the README banner is a temporary placeholder)
+scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, generate the banner
 docs/       plan and design notes
 ```

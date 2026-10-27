@@ -4,6 +4,10 @@ The goal is something like [Try Omarchy](https://github.com/omacom/try-omarchy),
 but better: a `.dmg` with a native Mac app that boots a full btw Linux desktop
 in seconds, with the Mac integration working out of the box.
 
+Identity: **btw is fractal.** Recursive and self-similar, from the app icon to
+the boot splash, the wallpaper and the desktop theme. One generator should
+produce all of these at every size, so the look stays consistent.
+
 ## How Try Omarchy does it (reference)
 
 - A Swift/AppKit launcher
@@ -50,10 +54,12 @@ ready-made disk. So:
 
 - [x] **M0: boot a Linux VM from Swift on an M1.** `make smoke` (headless
       kernel boot) and `make gui` (EFI ISO boot in a window).
-- [ ] **M1: factory disk.** `distro/` with a package list, a Dockerfile that
-      pacstraps an arm64 rootfs into a GPT disk (ESP + root) with
-      systemd-boot, and an output of `btw-factory.img.zst`. Booted via
-      `btw run` with no ISO.
+- [ ] **M1: factory disk.** Written but not yet run: `make image` builds it
+      and `make factory` boots it. The `distro/` folder has a package list, an
+      arm64 Docker builder that pacstraps Arch Linux ARM, and an image built
+      without loop devices (mkfs.ext4 -d, mtools, sfdisk) containing
+      systemd-boot and a root partition that grows itself. The launcher's
+      `--from` option clones the image for each VM.
 - [ ] **M2: guest integration (`btw-guest`).** Auto-mount `btw` and
       `rosetta` virtiofs shares, register the Rosetta binfmt, enable
       spice-vdagent for the clipboard, handle display resize, and power off
@@ -63,5 +69,7 @@ ready-made disk. So:
       (start/stop/reset), and settings for CPU, memory and shared folders.
 - [ ] **M4: graphics.** Measure llvmpipe performance and decide whether to
       prototype the QEMU + virgl backend.
+- [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
+      the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
 - [ ] **M5: ship.** Developer ID signing, notarization, a `.dmg`, an update
       channel for new factory disks, and CI that builds the image and the app.
