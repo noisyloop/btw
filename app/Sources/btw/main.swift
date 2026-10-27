@@ -34,6 +34,8 @@ func say(_ message: String) {
 func fail(_ message: String) -> Never {
     Terminal.restore()
     say(message)
+    // Opened from Finder there's no terminal to read stderr, so say it on screen.
+    if Launcher.isApp { Launcher.showError(message) }
     exit(1)
 }
 
@@ -46,7 +48,7 @@ func existingFile(_ path: String) -> URL {
 // Finder passes no arguments (older macOS adds -psn_*), so a double-clicked
 // btw.app asks what to boot instead of printing usage.
 var launchArguments = CommandLine.arguments.dropFirst().filter { !$0.hasPrefix("-psn_") }
-if launchArguments.isEmpty && Bundle.main.bundleURL.pathExtension == "app" {
+if launchArguments.isEmpty && Launcher.isApp {
     launchArguments = ["run"] + Launcher.chooseBoot()
 }
 var arguments = launchArguments.makeIterator()
