@@ -1,10 +1,3 @@
-<p align="center">
-  <img src="assets/fractal-banner.svg" alt="btw: a fractal tree growing branch by branch" width="720">
-</p>
-
-<!-- Temporary fractal banner. Regenerate with scripts/fractal-banner.py;
-     it will be replaced by the real fractal identity (docs/PLAN.md). -->
-
 <h1 align="center">btw</h1>
 
 <p align="center">
@@ -18,15 +11,17 @@ A native macOS launcher that boots btw in a VM on Apple silicon.</p>
 
 <p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.img.zst"><b>btw disk image</b></a> · free and open source</p>
 
+<p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
+
 > Early days: the app doesn't download the disk image by itself yet. Unpack it with
 > `zstd -d btw-factory.img.zst`, then boot it with `btw run --from btw-factory.img`.
+> Until the first release is out, the latest dmg is under **Artifacts** on the most recent
+> [Build run](https://github.com/noisyloop/btw/actions/workflows/build.yml).
 
 The current milestone is proving the hardest part: **booting a Linux VM from
 Swift on an M1**. See [docs/PLAN.md](docs/PLAN.md) for the full roadmap.
 
 ## Desktop preview
-
-<p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
 
 Until the VM desktop is ready, `desktop/` is a preview of what it will look like. It runs in any
 browser: open `desktop/index.html` (or `make preview`). It boots with a terminal open and
@@ -140,7 +135,7 @@ desktop/    browser preview of the btw desktop (temporary)
 .github/    CI: build, test and release (dmg + disk image)
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
-assets/     fractal art (the README banner is a temporary placeholder)
-scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests, generate the banner
+assets/     art for the app (an AppIcon.png here becomes the app icon)
+scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests
 docs/       plan and design notes
 ```
