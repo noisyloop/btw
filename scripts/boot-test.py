@@ -2,7 +2,8 @@
 """Boots the btw factory disk in QEMU (aarch64, UEFI) and checks that it:
   1. boots through systemd-boot and logs in automatically on the console (hvc0),
   2. grows its root filesystem to fill a larger disk,
-  3. powers off cleanly when asked.
+  3. resolves DNS names and has the desktop installed,
+  4. powers off cleanly when asked.
 
   scripts/boot-test.py out/btw-factory.img [disk GiB, default 16]
 
@@ -63,6 +64,21 @@ def main():
         if size < want:
             fail(f"root did not grow to fill the disk ({size} < {want} bytes)")
 
+        # DNS broke in the first images; check a lookup works (QEMU provides DNS).
+        console.sendall(b"echo DNS-$(getent hosts archlinux.org >/dev/null && echo ok || echo fail)\n")
+        dns = expect(console, qemu, rb"DNS-(ok|fail)", 60).group(1)
+        print(f"\n== DNS: {dns.decode()}", flush=True)
+        if dns != b"ok":
+            console.sendall(b"ls -l /etc/resolv.conf; systemctl --no-pager status systemd-resolved | head -20\n")
+            drain(console, 8)
+            fail("DNS lookups don't work in the VM")
+
+        console.sendall(b"echo DESKTOP-$(pacman -Q sway waybar foot fuzzel >/dev/null && echo ok || echo missing)\n")
+        desktop = expect(console, qemu, rb"DESKTOP-(ok|missing)", 60).group(1)
+        print(f"\n== desktop packages: {desktop.decode()}", flush=True)
+        if desktop != b"ok":
+            fail("the desktop packages are missing")
+
         console.sendall(b"echo btw | sudo -S systemctl poweroff\n")
         try:
             qemu.wait(timeout=180)
@@ -108,6 +124,21 @@ def expect(console, qemu, pattern, timeout):
         if match:
             return match
     fail(f"timed out after {timeout}s waiting for {pattern!r}")
+
+
+def drain(console, seconds):
+    """Prints whatever the console sends for a few seconds (diagnostics)."""
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        console.settimeout(max(0.1, deadline - time.time()))
+        try:
+            chunk = console.recv(4096)
+        except socket.timeout:
+            continue
+        if not chunk:
+            return
+        sys.stdout.write(chunk.decode(errors="replace"))
+        sys.stdout.flush()
 
 
 def fail(message):

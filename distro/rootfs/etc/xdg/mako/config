@@ -1,0 +1,9 @@
+# btw notifications (palette from distro/themes/fractal)
+font=IBM Plex Sans 10
+background-color=#0e1210f0
+text-color=#e7efe9
+border-color=#3ddc97
+border-size=2
+border-radius=10
+padding=12
+default-timeout=6000

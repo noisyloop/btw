@@ -1,0 +1,26 @@
+// btw desktop bar (style: /etc/xdg/waybar/style.css, from distro/themes/fractal)
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "modules-left": ["custom/btw", "sway/workspaces"],
+  "modules-center": ["sway/window"],
+  "modules-right": ["cpu", "memory", "network", "clock"],
+  "custom/btw": {
+    "format": "▲ btw",
+    "tooltip": false,
+    "on-click": "fuzzel"
+  },
+  "sway/workspaces": {
+    "persistent-workspaces": { "1": [], "2": [], "3": [], "4": [], "5": [] }
+  },
+  "sway/window": { "max-length": 60 },
+  "cpu": { "format": "cpu {usage}%", "interval": 3 },
+  "memory": { "format": "mem {used:0.1f}G", "interval": 5 },
+  "network": {
+    "format-ethernet": "wired",
+    "format-disconnected": "offline",
+    "tooltip-format": "{ipaddr}"
+  },
+  "clock": { "format": "{:%a %d %b  %H:%M}" }
+}

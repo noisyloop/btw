@@ -1,0 +1,10 @@
+#!/bin/sh
+# Starts the btw desktop on the VM's virtio-gpu display. The VM has no GPU
+# acceleration, so wlroots renders with pixman (on the CPU) and draws its own
+# cursor. Exiting the desktop (Super+Shift+E) drops back to this console.
+export WLR_RENDERER=pixman
+export WLR_NO_HARDWARE_CURSORS=1
+export XDG_CURRENT_DESKTOP=sway
+export MOZ_ENABLE_WAYLAND=1
+mkdir -p "$HOME/.local/state"
+exec sway >"$HOME/.local/state/sway.log" 2>&1
