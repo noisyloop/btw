@@ -1,0 +1,3 @@
+# <device>         <dir>  <type>  <options>                    <dump> <pass>
+LABEL=btw-root     /      ext4    rw,relatime,x-systemd.growfs  0      1
+LABEL=BTW-ESP      /boot  vfat    rw,relatime,fmask=0077,dmask=0077  0  2

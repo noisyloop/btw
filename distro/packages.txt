@@ -1,0 +1,9 @@
+# Packages pacstrapped into the btw factory disk, one per line.
+base
+archlinuxarm-keyring
+linux-aarch64
+mkinitcpio
+sudo
+openssh
+less
+vim
