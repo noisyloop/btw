@@ -176,6 +176,10 @@ On another distro, check first with `pacman -Qi <package>` ("Required By") befor
 
 ### If something goes wrong
 
+- **btw doesn't open from the app menu or `btw-session`:** it now shows a notification
+  (and prints in the terminal) with the reason. For everything Sway says, run
+  `btw-session --foreground` in a terminal; btw then stays attached to it and prints its
+  output there. The same output is saved in `~/.local/state/sway.log`.
 - **Black screen or Sway won't start:** look at `~/.local/state/sway.log`. From a text
   console, `WLR_RENDERER=pixman btw-session` forces CPU drawing, which works on any GPU.
 - **No bar, menu or notifications:** look at `~/.local/state/btw-bar.log`, and press
