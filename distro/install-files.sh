@@ -41,6 +41,11 @@ for f in "$src"/themes/fractal/*; do
 done
 put 644 "$src/themes/fractal/wallpaper.png" /usr/share/backgrounds/btw/fractal.png
 put 644 "$src/btw.desktop" /usr/share/wayland-sessions/btw.desktop
+# An app-menu entry that opens btw in a window inside another desktop, and the
+# icon for it.
+put 644 "$src/btw-app.desktop" /usr/share/applications/btw.desktop
+put 644 "$src/../assets/AppIcon.svg" /usr/share/icons/hicolor/scalable/apps/btw.svg
+put 644 "$src/../assets/AppIcon.png" /usr/share/pixmaps/btw.png
 
 manifest+=(/usr/share/btw/installed-files)
 mkdir -p "$root/usr/share/btw"
