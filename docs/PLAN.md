@@ -82,8 +82,14 @@ ready-made disk. So:
       only `Sway.qml` talks to Sway, so it can move to niri with btw. Steps:
       the top bar next to waybar behind a toggle, the app menu in place of
       fuzzel and notifications in place of mako (all done, needing a test in
-      the VM for CPU use); then the lock screen; then making the shell the
-      default and dropping waybar, fuzzel and mako.
+      the VM for CPU use); then making the shell the default and dropping
+      waybar, fuzzel and mako. A lock screen matters only on real hardware
+      (on a Mac, macOS locks the screen), so it waits for that.
+- [x] **btw on any Arch system.** `install.sh` installs btw as its own Sway
+      session next to the existing desktop (e.g. Omarchy's Hyprland), with
+      its configs in `/usr/share/btw`, never in `~/.config`. The Mac disk
+      build installs the same files through `distro/install-files.sh`.
+      Later: a Hyprland backend for the shell, to run it inside Omarchy.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
       The icon is done: `scripts/make-icon.py` draws a green Sierpinski

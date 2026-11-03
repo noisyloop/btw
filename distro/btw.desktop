@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=btw
+Comment=The btw desktop: Sway with the btw shell and the fractal theme
+Exec=/usr/local/bin/btw-session
+Type=Application
+DesktopNames=sway

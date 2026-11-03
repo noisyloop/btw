@@ -10,6 +10,8 @@ set -u
 
 conf="${XDG_CONFIG_HOME:-$HOME/.config}/btw/bar"
 shell=/usr/share/btw/shell
+# btw's own configs, so a user's ~/.config/waybar and mako are left alone.
+btwconf=/usr/share/btw/config
 log="$HOME/.local/state/btw-bar.log"
 
 chosen() {
@@ -42,8 +44,8 @@ start() {
         QT_QUICK_BACKEND="${QT_QUICK_BACKEND:-software}" QT_QPA_PLATFORM=wayland \
             setsid quickshell -p "$shell" >"$log" 2>&1 </dev/null &
     else
-        setsid waybar >"$log" 2>&1 </dev/null &
-        setsid mako --config /etc/xdg/mako/config >>"$log" 2>&1 </dev/null &
+        setsid waybar -c "$btwconf/waybar/config.jsonc" -s "$btwconf/waybar/style.css" >"$log" 2>&1 </dev/null &
+        setsid mako --config "$btwconf/mako/config" >>"$log" 2>&1 </dev/null &
     fi
 }
 

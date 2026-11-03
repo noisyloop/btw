@@ -7,4 +7,4 @@ if pgrep -f "quickshell -p $shell" >/dev/null; then
 fi
 # fuzzel closes itself if it's already open.
 pkill -x fuzzel && exit 0
-exec fuzzel
+exec fuzzel --config /usr/share/btw/config/fuzzel/fuzzel.ini

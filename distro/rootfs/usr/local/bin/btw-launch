@@ -34,7 +34,7 @@ cmd=$(printf '%s' "$exec_line" | sed -e 's/%[fFuUdDnNickvm]//g' -e 's/%%/%/g')
 
 cd "$HOME" || true
 if [ "$terminal" = true ]; then
-    exec setsid foot -e sh -c "$cmd" </dev/null >/dev/null 2>&1
+    exec setsid foot --config /usr/share/btw/config/foot/foot.ini -e sh -c "$cmd" </dev/null >/dev/null 2>&1
 else
     exec setsid sh -c "exec $cmd" </dev/null >/dev/null 2>&1
 fi

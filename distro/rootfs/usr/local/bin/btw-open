@@ -1,0 +1,25 @@
+#!/bin/sh
+# Opens the user's web browser or file manager, whichever they've chosen as
+# the default, falling back to Firefox and Thunar (what the btw VM ships).
+#   btw-open browser | files
+
+# Starts a default app by its .desktop name if it's installed.
+launch() {
+    id=${1%.desktop}
+    [ -n "$id" ] && btw-apps | cut -f1 | grep -qxF "$id" && exec btw-launch "$id"
+}
+
+case "${1:-}" in
+browser)
+    launch "$(xdg-settings get default-web-browser 2>/dev/null)"
+    exec firefox
+    ;;
+files)
+    launch "$(xdg-mime query default inode/directory 2>/dev/null)"
+    exec thunar
+    ;;
+*)
+    echo "usage: btw-open browser | files" >&2
+    exit 2
+    ;;
+esac

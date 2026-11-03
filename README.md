@@ -59,6 +59,32 @@ You need Apple's command line tools (the script offers to install them) and, for
 image, Docker Desktop or OrbStack running. `./build-local.sh app`, `image` or `boot` do one
 step at a time.
 
+## Try btw on your Linux
+
+btw isn't only for Macs. On an Arch-based system (Arch, Omarchy, EndeavourOS, CachyOS, …),
+on a PC or in a VM, x86-64 or arm64, install it next to the desktop you already have:
+
+```sh
+git clone https://github.com/noisyloop/btw.git
+cd btw
+./install.sh
+```
+
+It installs the packages with pacman (Sway, waybar, foot, fuzzel, mako, Quickshell, the
+fonts) and puts btw's scripts in `/usr/local/bin` and everything else in `/usr/share/btw`.
+Then log out and pick **btw** on the login screen, or log in on a text console
+(<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F3</kbd>) and run `btw-session`.
+
+btw is a separate session with its own configs, passed straight to each program, so it
+never reads or changes your `~/.config`. On Omarchy, Hyprland and its setup stay exactly
+as they were, and you choose between them when you log in. Super+B and Super+E open your
+default browser and file manager. On a real GPU Sway renders with it; without one (the Mac
+VM) it falls back to the CPU, and on NVIDIA's driver it starts with `--unsupported-gpu`.
+`./install.sh --uninstall` removes btw's files again (`--no-packages` skips pacman).
+
+GNOME isn't a good fit: GNOME Shell draws its own bar and menus and doesn't let other
+programs add panels, so the btw shell can't run there.
+
 ## Requirements
 
 - An Apple silicon Mac (M1 or newer) on macOS 13 Ventura or newer
@@ -130,7 +156,7 @@ btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.
   a summary, the body and the app's action buttons. Hovering pauses a card; clicking runs
   the app's default action; critical ones (amber) stay until closed.
 
-The lock screen comes next. The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
+The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
 has GPU acceleration.
 
 Waybar, fuzzel and mako are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>
@@ -195,7 +221,9 @@ binaries can run in the arm64 guest.
 ```
 desktop/    browser preview of the btw desktop (temporary)
 .github/    CI, run by hand: build, test and release (dmg + disk image)
-distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/
+install.sh  install btw on an existing Arch-based system, as its own login session
+distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/,
+            shell/ (the btw shell) and install-files.sh (puts btw in place, for both)
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
 assets/     the app icon (AppIcon.png, from scripts/make-icon.py)
 scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests
