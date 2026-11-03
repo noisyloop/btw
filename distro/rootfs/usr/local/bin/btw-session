@@ -7,11 +7,41 @@
 # btw opens in a window instead. It detaches, so closing the terminal doesn't
 # close btw, and it uses Alt where it would use Super, since the desktop
 # around it keeps the Super shortcuts. Leave it with Alt+Shift+E.
+#
+#   btw-session               start btw (detached when inside another desktop)
+#   btw-session --foreground  stay attached and print everything, for debugging
+#
+# If btw doesn't come up, the reason is shown (and is in ~/.local/state/sway.log).
+log="$HOME/.local/state/sway.log"
+mkdir -p "$HOME/.local/state"
+foreground=
+[ "${1:-}" = --foreground ] && { foreground=yes; shift; }
+
 config=/usr/share/btw/config/sway/config
 if [ -n "${WAYLAND_DISPLAY:-}" ]; then
-    if [ -z "${BTW_DETACHED:-}" ]; then
-        BTW_DETACHED=1 setsid -f "$0" "$@" </dev/null >/dev/null 2>&1
-        exit 0
+    if [ -z "${BTW_DETACHED:-}" ] && [ -z "$foreground" ]; then
+        # Start btw in its own session, then wait a moment to see whether it
+        # stays up: if it quits, say why instead of failing silently.
+        BTW_DETACHED=1 setsid "$0" "$@" </dev/null >/dev/null 2>&1 &
+        pid=$!
+        i=0
+        while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
+            sleep 0.1
+            i=$((i + 1))
+        done
+        if kill -0 "$pid" 2>/dev/null; then
+            exit 0
+        fi
+        reason=$(grep -iE 'error|fail|unable|cannot|could not' "$log" 2>/dev/null | tail -n 3)
+        [ -n "$reason" ] || reason=$(tail -n 3 "$log" 2>/dev/null)
+        echo "btw didn't start. From $log:" >&2
+        echo "$reason" >&2
+        echo "For the full output, run: btw-session --foreground" >&2
+        command -v notify-send >/dev/null &&
+            notify-send -u critical "btw didn't start" "$reason
+
+Details: $log, or run btw-session --foreground in a terminal."
+        exit 1
     fi
     window="${XDG_RUNTIME_DIR:-/tmp}/btw-window.conf"
     sed 's/^set \$mod Mod4$/set $mod Mod1/' "$config" >"$window"
@@ -44,5 +74,24 @@ export QT_QPA_PLATFORM="wayland;xcb"
 set --
 [ -d /sys/module/nvidia_drm ] && set -- --unsupported-gpu
 
-mkdir -p "$HOME/.local/state"
-exec sway "$@" --config "$config" >"$HOME/.local/state/sway.log" 2>&1
+# What btw-session decided, at the top of the log, then Sway's own output.
+{
+    echo "btw-session $(date '+%F %T')"
+    if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        echo "  in a window, inside $WAYLAND_DISPLAY"
+    else
+        echo "  full screen"
+    fi
+    echo "  renderer: ${WLR_RENDERER:-GPU} ${*:+(sway $*)}"
+    echo "  config: $config"
+    echo "  sway: $(command -v sway || echo 'not installed')"
+} >"$log"
+if ! command -v sway >/dev/null; then
+    echo "sway isn't installed; run ./install.sh again" | tee -a "$log" >&2
+    exit 1
+fi
+if [ -n "$foreground" ]; then
+    sway "$@" --config "$config" 2>&1 | tee -a "$log"
+    exit
+fi
+exec sway "$@" --config "$config" >>"$log" 2>&1
