@@ -68,19 +68,25 @@ desktop changes, and you choose between them when you log in.
 
 ### Install
 
+One command, no clone needed:
+
 ```sh
-git clone https://github.com/noisyloop/btw.git
-cd btw
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/install.sh | bash
 ```
+
+It downloads btw into `~/.local/share/btw/src` and installs it from there. If you'd rather
+have your own clone, `git clone https://github.com/noisyloop/btw.git`, then `cd btw` and
+`./install.sh` does the same. (If git says the `btw` folder already exists, you cloned it
+before: `cd btw && git pull` instead, or use `btw-update` below.)
 
 Run it as your normal user; it asks for your password when it needs sudo. It:
 
 - installs the packages with pacman: Sway, swaybg, waybar, foot, fuzzel, mako, libnotify,
   Quickshell, polkit, xdg-utils and the IBM Plex and DejaVu fonts. Ones you already have
   are skipped, and any your repos don't carry are skipped with a warning.
-- puts btw's scripts in `/usr/local/bin` (`btw-session`, `btw-bar`, `btw-menu`, …) and
-  everything else in `/usr/share/btw`, and adds a **btw** entry to the login screen.
+- puts btw's scripts in `/usr/local/bin` (`btw-session`, `btw-update`, `btw-menu`, …) and
+  everything else in `/usr/share/btw`, and adds **btw** to your app menu and login screen.
+- replaces any btw that's already installed, removing the old version's files first.
 
 btw keeps its own configs in `/usr/share/btw/config` and hands them straight to each
 program, so it never reads or changes your `~/.config`. If you already use waybar, mako or
@@ -141,23 +147,29 @@ CPU, and on NVIDIA's proprietary driver it starts with `--unsupported-gpu`.
 ### Update
 
 ```sh
-cd btw
-git pull
-./install.sh --no-packages
+btw-update
 ```
 
-`--no-packages` copies the new btw files without touching pacman. Leave it off if an update
-adds packages.
+It downloads the newest btw and installs it over the one you have (any new packages too).
+To try changes before they're merged, give it the branch of a pull request:
+
+```sh
+btw-update claude/sway-desktop-roadmap-q7kb2y
+```
+
+and `btw-update` on its own goes back to the main version. From your own clone,
+`git pull && ./install.sh` does the same.
 
 ### Remove
 
 ```sh
-cd btw
-./install.sh --uninstall
+curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/install.sh | bash -s -- --uninstall
 ```
 
+(or `./install.sh --uninstall` from your clone).
+
 This deletes every file btw installed (the scripts, `/usr/share/btw`, the wallpaper, the
-icon, and the app-menu and login-screen entries) and leaves your packages alone. To clear btw's remembered settings and
+icon, the app-menu and login-screen entries, and the download in `~/.local/share/btw/src`) and leaves your packages alone. To clear btw's remembered settings and
 logs too:
 
 ```sh

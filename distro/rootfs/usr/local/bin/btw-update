@@ -1,0 +1,28 @@
+#!/bin/sh
+# Replaces the installed btw with the newest one from GitHub: fetches it into
+# ~/.local/share/btw/src and runs its install.sh, which removes the old btw's
+# files and installs the new ones (and any new packages).
+#
+#   btw-update            the newest btw (main)
+#   btw-update <branch>   a branch, e.g. to try a pull request before it's merged
+#
+# The Mac VM gets btw from its disk image instead.
+set -eu
+repo="${BTW_REPO:-https://github.com/noisyloop/btw.git}"
+src="${XDG_DATA_HOME:-$HOME/.local/share}/btw/src"
+branch=${1:-main}
+
+command -v git >/dev/null || { echo "btw-update: git is missing (sudo pacman -S git)" >&2; exit 1; }
+command -v pacman >/dev/null || { echo "btw-update: this needs an Arch-based system" >&2; exit 1; }
+
+if [ -d "$src/.git" ]; then
+    echo "Fetching btw ($branch)..."
+    git -C "$src" fetch -q --depth 1 origin "$branch"
+    git -C "$src" reset -q --hard FETCH_HEAD
+else
+    echo "Downloading btw ($branch)..."
+    mkdir -p "$(dirname "$src")"
+    git clone -q --depth 1 --branch "$branch" "$repo" "$src"
+fi
+echo "Version: $(git -C "$src" log -1 --format='%h %s')"
+exec bash "$src/install.sh"
