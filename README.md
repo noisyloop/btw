@@ -188,10 +188,9 @@ On another distro, check first with `pacman -Qi <package>` ("Required By") befor
 
 ### If something goes wrong
 
-- **btw doesn't open from the app menu or `btw-session`:** it now shows a notification
-  (and prints in the terminal) with the reason. For everything Sway says, run
-  `btw-session --foreground` in a terminal; btw then stays attached to it and prints its
-  output there. The same output is saved in `~/.local/state/sway.log`.
+- **btw doesn't open, or closes by itself:** a notification says why. For everything Sway
+  says, run `btw-session --foreground` in a terminal; btw then stays attached to it and
+  prints its output there. The same output is saved in `~/.local/state/sway.log`.
 - **In a window, your GPU may not allow it** (often with NVIDIA's driver): btw then retries
   drawing on the CPU by itself. The GPU attempt's log is kept in
   `~/.local/state/sway.log.gpu`.
