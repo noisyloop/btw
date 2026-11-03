@@ -1,0 +1,42 @@
+#!/bin/sh
+# Opens btw in a window on Windows, through WSLg. The btw shortcut in the
+# Start menu runs this (install-btw.ps1 puts it in /usr/local/bin).
+#
+# It sets up what WSLg needs, then runs btw-session as it is:
+#   - WSLg keeps its display socket in /mnt/wslg/runtime-dir. With systemd on,
+#     the login's runtime dir is /run/user/<uid> instead, so the socket (and
+#     the PulseAudio one) are linked there for btw to find.
+#   - btw stays in the foreground: WSL shuts Linux down soon after nothing
+#     started from Windows is running, which would close btw. (BTW_STARTED
+#     tells btw-session it's already been handed off, so it runs here.)
+set -u
+wslg=/mnt/wslg/runtime-dir
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
+
+rt="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+[ -d "$rt" ] || rt=$wslg
+export XDG_RUNTIME_DIR="$rt"
+
+if [ "$rt" != "$wslg" ] && [ -S "$wslg/$WAYLAND_DISPLAY" ] && [ ! -S "$rt/$WAYLAND_DISPLAY" ]; then
+    ln -sf "$wslg/$WAYLAND_DISPLAY" "$rt/$WAYLAND_DISPLAY"
+    [ -e "$wslg/$WAYLAND_DISPLAY.lock" ] && ln -sf "$wslg/$WAYLAND_DISPLAY.lock" "$rt/$WAYLAND_DISPLAY.lock"
+fi
+if [ -d "$wslg/pulse" ] && [ ! -e "$rt/pulse" ] && [ "$rt" != "$wslg" ]; then
+    ln -sf "$wslg/pulse" "$rt/pulse"
+fi
+# The login's D-Bus, for notifications, when systemd runs one.
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "$rt/bus" ]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus"
+fi
+
+if [ ! -S "$rt/$WAYLAND_DISPLAY" ]; then
+    echo "btw-wsl: no WSLg display ($rt/$WAYLAND_DISPLAY)." >&2
+    echo "Check that WSL is up to date (wsl --update in PowerShell) and that GUI apps work." >&2
+    exit 1
+fi
+if ! command -v btw-session >/dev/null; then
+    echo "btw-wsl: btw isn't installed in this Linux; run install-btw.ps1 again." >&2
+    exit 1
+fi
+
+BTW_STARTED=1 exec btw-session
