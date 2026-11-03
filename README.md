@@ -3,12 +3,14 @@
 <p align="center">
   <a href="https://github.com/noisyloop/btw/releases/latest"><img src="https://img.shields.io/github/v/release/noisyloop/btw?label=release" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20(Apple%20silicon)-blue" alt="macOS on Apple silicon">
+  <img src="https://img.shields.io/badge/platform-Windows%20(WSL)-blue" alt="Windows with WSL">
+  <img src="https://img.shields.io/badge/platform-Arch%20Linux%20%7C%20Omarchy-blue" alt="Arch Linux and Omarchy">
 </p>
 
-<p align="center"><b>A fractal-themed Linux desktop you can try on a Mac with one download.</b><br>
-A native macOS launcher that boots btw in a VM on Apple silicon.</p>
+<p align="center"><b>A fractal-themed Linux desktop you can try on a Mac, on Windows, or on your Arch Linux.</b><br>
+A native macOS launcher on Apple silicon, one PowerShell command on Windows, one command on Arch and Omarchy.</p>
 
-<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · free and open source</p>
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · free and open source</p>
 
 <p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
 
