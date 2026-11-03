@@ -86,6 +86,8 @@ ready-made disk. So:
       default and dropping waybar, fuzzel and mako.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
+      The icon is done: `scripts/make-icon.py` draws a green Sierpinski
+      triangle on black. The splash and wallpapers should reuse it.
 - [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
       factory disk, boot-tests the disk in QEMU, and publishes a release when
       the version in `app/Info.plist` changes. It runs only when started by

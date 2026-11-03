@@ -166,7 +166,8 @@ CI doesn't run on pushes or pull requests. The GitHub Actions workflow
 make dmg   # dist/btw.app and dist/btw-macos.dmg, ad-hoc signed
 ```
 
-Drop a 1024×1024 `assets/AppIcon.png` in place to get an app icon. Double-clicking
+The app icon, a green Sierpinski triangle on black, is `assets/AppIcon.png`, drawn by
+`scripts/make-icon.py` (rerun it to change the icon; it needs Pillow for the PNG). Double-clicking
 `btw.app` asks whether to boot the existing VM or install from an ISO. The dmg is
 ad-hoc signed, not notarized, so on another Mac you have to right-click the app
 and choose Open the first time.
@@ -196,7 +197,7 @@ desktop/    browser preview of the btw desktop (temporary)
 .github/    CI, run by hand: build, test and release (dmg + disk image)
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
-assets/     art for the app (an AppIcon.png here becomes the app icon)
+assets/     the app icon (AppIcon.png, from scripts/make-icon.py)
 scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests
 docs/       plan and design notes
 ```
