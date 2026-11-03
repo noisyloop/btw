@@ -6,9 +6,8 @@
 #
 # Inside another desktop (e.g. Omarchy), btw opens in a window, using Alt
 # where it would use Super, since the desktop around it keeps the Super
-# shortcuts. Alt+Shift+E closes it.
-#   - From the app menu, it runs like any other app.
-#   - From a terminal, it detaches, so closing the terminal doesn't close it.
+# shortcuts. Alt+Shift+E closes it. From the app menu or a terminal, it runs
+# as its own systemd user service, so closing the terminal doesn't close it.
 #
 #   btw-session               start btw
 #   btw-session --foreground  stay in the terminal and print everything
@@ -22,11 +21,28 @@ foreground=
 
 config=/usr/share/btw/config/sway/config
 if [ -n "${WAYLAND_DISPLAY:-}" ]; then
-    # Typed in a terminal: hand btw off and give the terminal back.
-    if [ -t 0 ] && [ -z "$foreground" ]; then
-        setsid -f "$0" </dev/null >/dev/null 2>&1
-        echo "btw is opening in a window. Alt+Shift+E closes it."
-        exit 0
+    # Hand btw to the login's own systemd, as a service of its own, and give
+    # control back. Run as a child of the terminal or the app launcher, btw
+    # shares their clean-up, and on Omarchy something there kills it (signal
+    # 9) before its window appears. As its own service it belongs to neither.
+    if [ -z "$foreground" ] && [ -z "${BTW_STARTED:-}" ]; then
+        opened() {
+            [ -t 1 ] && echo "btw is opening in a window. Alt+Shift+E closes it."
+            exit 0
+        }
+        if command -v systemd-run >/dev/null; then
+            # A service starts with the login's environment, not ours, so pass
+            # along what btw needs from here.
+            set -- --setenv=BTW_STARTED=1
+            for v in WAYLAND_DISPLAY DISPLAY PATH LANG XDG_DATA_DIRS XDG_CONFIG_DIRS DBUS_SESSION_BUS_ADDRESS; do
+                eval "[ -n \"\${$v:-}\" ]" && set -- "$@" "--setenv=$v"
+            done
+            systemd-run --user --quiet --collect --unit="btw-window-$(date +%s)-$$" \
+                "$@" "$0" >/dev/null 2>&1 && opened
+        fi
+        # No user systemd: start it in a session of its own instead.
+        BTW_STARTED=1 setsid -f "$0" </dev/null >/dev/null 2>&1
+        opened
     fi
     # Alt instead of Super, and without /etc/sway/config.d: Arch's
     # 50-systemd-user.conf there tells the whole login that the desktop is
