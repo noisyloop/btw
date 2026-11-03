@@ -25,8 +25,18 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
         # some GPU drivers (often NVIDIA's) won't let it; if it quits, try
         # again drawing on the CPU, which always works. If that fails too,
         # say why instead of failing silently.
+        i0=0
         try() {
-            env BTW_DETACHED=1 "$@" setsid "$0" </dev/null >/dev/null 2>&1 &
+            # In its own systemd scope when it can: app launchers (Omarchy's
+            # included) run each app in a unit they clean up afterwards, which
+            # would take btw down with it. From a terminal it works either way.
+            if command -v systemd-run >/dev/null && [ -S "${XDG_RUNTIME_DIR:-/nonexistent}/systemd/private" ]; then
+                scope="systemd-run --user --scope --quiet --collect --unit=btw-window-$$-$i0"
+            else
+                scope=
+            fi
+            i0=$((i0 + 1))
+            env BTW_DETACHED=1 "$@" $scope setsid "$0" </dev/null >/dev/null 2>&1 &
             pid=$!
             i=0
             while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
@@ -46,7 +56,7 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
         # Sway's own messages, not those of the programs it started (swaybg,
         # waybar, ...), which only report that Sway went away.
         reason=$(grep -v -e 'swaybg' -e 'waybar' -e 'mako' -e 'quickshell' -e 'foot' "$log" 2>/dev/null |
-            grep -iE 'error|fail|unable|cannot|could not|abort|segmentation' | tail -n 4)
+            grep -iE 'error|fail|unable|cannot|could not|abort|segmentation|sway (exited|was stopped)' | tail -n 4)
         [ -n "$reason" ] || reason=$(tail -n 4 "$log" 2>/dev/null)
         echo "btw didn't start. From $log:" >&2
         echo "$reason" >&2
@@ -103,6 +113,7 @@ set --
     echo "  renderer: ${WLR_RENDERER:-GPU} ${*:+(sway $*)}"
     echo "  config: $config"
     echo "  sway: $(command -v sway || echo 'not installed')"
+    echo "  started in: $(sed -n 's/^0:://p' /proc/self/cgroup 2>/dev/null)"
 } >"$log"
 if ! command -v sway >/dev/null; then
     echo "sway isn't installed; run ./install.sh again" | tee -a "$log" >&2
@@ -111,5 +122,17 @@ fi
 if [ -n "$foreground" ]; then
     sway "$@" --config "$config" 2>&1 | tee -a "$log"
     exit
+fi
+if [ -n "${BTW_DETACHED:-}" ]; then
+    # In a window, note how Sway ended: an error, a clean exit, or a signal
+    # from something else stopping it.
+    sway "$@" --config "$config" >>"$log" 2>&1
+    status=$?
+    if [ $status -gt 128 ]; then
+        echo "sway was stopped by signal $((status - 128)) ($(kill -l $((status - 128)) 2>/dev/null))" >>"$log"
+    else
+        echo "sway exited with status $status" >>"$log"
+    fi
+    exit $status
 fi
 exec sway "$@" --config "$config" >>"$log" 2>&1
