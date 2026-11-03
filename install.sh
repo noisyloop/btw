@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 # Installs the btw desktop on an existing Arch-based system (Arch, Omarchy,
-# EndeavourOS, CachyOS, ...), next to whatever desktop it already has.
+# EndeavourOS, CachyOS, ...), next to whatever desktop it already has. It
+# replaces any btw already installed, so it's also how you update.
 #
 #   ./install.sh                 install the packages and btw
 #   ./install.sh --no-packages   only copy btw's files (packages already there)
 #   ./install.sh --uninstall     remove btw's files (packages are left alone)
+#
+# Without a checkout, it fetches btw first (into ~/.local/share/btw/src):
+#   curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/install.sh | bash
+# Once installed, btw-update [branch] fetches the newest btw and reinstalls it.
 #
 # btw becomes a separate "btw" session: pick it on the login screen, or run
 # btw-session from a text console. It keeps its configs in /usr/share/btw and
 # doesn't touch your ~/.config, so your current desktop (e.g. Omarchy's
 # Hyprland) stays exactly as it is.
 set -euo pipefail
-cd "$(dirname "$0")"
+REPO="${BTW_REPO:-https://github.com/noisyloop/btw.git}"
+SRC="${XDG_DATA_HOME:-$HOME/.local/share}/btw/src"
 
 # Sway and its helpers, the btw shell, and what the desktop scripts use.
 PACKAGES=(
@@ -30,11 +36,29 @@ case "${1:-}" in
 --no-packages) packages=no ;;
 --uninstall) mode=uninstall ;;
 -h | --help)
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,17p' "${BASH_SOURCE[0]:-$0}" | sed 's/^# \{0,1\}//'
   exit 0
   ;;
 *) die "unknown option $1 (try --help)" ;;
 esac
+
+# Run from a checkout, install that checkout. Otherwise (curl ... | bash),
+# fetch btw into $SRC and run the install.sh there.
+here="$(dirname "${BASH_SOURCE[0]:-}")"
+if [[ -n "${BASH_SOURCE[0]:-}" && -f "$here/distro/install-files.sh" ]]; then
+  cd "$here"
+elif [[ "${mode:-}" != uninstall ]]; then
+  command -v git >/dev/null || die "git is missing (sudo pacman -S git)."
+  step "Fetching btw"
+  if [[ -d "$SRC/.git" ]]; then
+    git -C "$SRC" fetch -q --depth 1 origin main
+    git -C "$SRC" reset -q --hard FETCH_HEAD
+  else
+    mkdir -p "$(dirname "$SRC")"
+    git clone -q --depth 1 "$REPO" "$SRC"
+  fi
+  exec bash "$SRC/install.sh" "$@"
+fi
 
 [[ $EUID -ne 0 ]] || die "run this as your normal user; it asks for sudo when it needs it."
 command -v sudo >/dev/null || die "sudo is missing."
@@ -46,6 +70,7 @@ if [[ "${mode:-}" == uninstall ]]; then
   mapfile -t files <"$manifest"
   sudo rm -f -- "${files[@]}"
   sudo rm -rf /usr/share/btw /usr/share/backgrounds/btw
+  rm -rf "$SRC"
   note "Done. The packages are still installed; remove them with pacman if you"
   note "don't need them. Your settings in ~/.config/btw are left in place."
   exit 0
@@ -70,6 +95,13 @@ if [[ $packages == yes ]]; then
 fi
 
 step "Installing btw"
+# Replace any btw already installed: remove its files first, so nothing from
+# an older version is left behind.
+if [[ -f /usr/share/btw/installed-files ]]; then
+  mapfile -t old </usr/share/btw/installed-files
+  sudo rm -f -- "${old[@]}"
+  note "replaced the btw that was installed"
+fi
 sudo distro/install-files.sh /
 # So app menus find the new icon right away.
 if command -v gtk-update-icon-cache >/dev/null; then
@@ -92,4 +124,5 @@ if [[ -d "$HOME/.local/share/omarchy" ]]; then
   note "automatically, log out from its menu to reach the session list."
 fi
 note ""
+note "To update btw later: btw-update"
 note "To remove btw: ./install.sh --uninstall"

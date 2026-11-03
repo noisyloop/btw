@@ -43,8 +43,12 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
 Details: $log, or run btw-session --foreground in a terminal."
         exit 1
     fi
+    # Alt instead of Super, and without /etc/sway/config.d: Arch's
+    # 50-systemd-user.conf there tells the whole login that the desktop is
+    # now Sway, which would confuse the desktop around the window (Omarchy's
+    # launcher would hide apps and send new windows to btw).
     window="${XDG_RUNTIME_DIR:-/tmp}/btw-window.conf"
-    sed 's/^set \$mod Mod4$/set $mod Mod1/' "$config" >"$window"
+    sed -e 's/^set \$mod Mod4$/set $mod Mod1/' -e '/^include \/etc\/sway\/config\.d\//d' "$config" >"$window"
     config=$window
 fi
 
