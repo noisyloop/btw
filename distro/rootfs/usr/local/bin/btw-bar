@@ -1,6 +1,7 @@
 #!/bin/sh
-# Starts the btw top bar: waybar, or the btw shell (Quickshell) while it is
-# being tried out. The choice is saved in ~/.config/btw/bar.
+# Starts the btw top bar and notifications: waybar and mako, or the btw shell
+# (Quickshell), which does both. The choice is saved in ~/.config/btw/bar.
+# Only one program can show notifications, so mako runs only with waybar.
 #
 #   btw-bar start    start the chosen bar (Sway runs this at login)
 #   btw-bar toggle   switch between waybar and the btw shell (Super+Shift+B)
@@ -21,10 +22,12 @@ chosen() {
 
 stop() {
     pkill -x waybar
+    pkill -x mako
     pkill -f "quickshell -p $shell"
-    # Wait for the old bar to give up its space on screen.
+    # Wait for the old bar to give up its space on screen and the
+    # notification service name.
     i=0
-    while { pgrep -x waybar || pgrep -f "quickshell -p $shell"; } >/dev/null && [ $i -lt 20 ]; do
+    while { pgrep -x waybar || pgrep -x mako || pgrep -f "quickshell -p $shell"; } >/dev/null && [ $i -lt 20 ]; do
         sleep 0.1
         i=$((i + 1))
     done
@@ -40,10 +43,13 @@ start() {
             setsid quickshell -p "$shell" >"$log" 2>&1 </dev/null &
     else
         setsid waybar >"$log" 2>&1 </dev/null &
+        setsid mako --config /etc/xdg/mako/config >>"$log" 2>&1 </dev/null &
     fi
 }
 
 notify() {
+    # Give the new notification service a moment to start.
+    sleep 0.5
     command -v notify-send >/dev/null && notify-send -t 2000 "btw" "$1"
 }
 
@@ -56,11 +62,11 @@ toggle)
     if [ "$(chosen)" = shell ]; then
         echo waybar >"$conf"
         start
-        notify "Bar: waybar"
+        notify "Switched to waybar and mako"
     elif command -v quickshell >/dev/null; then
         echo shell >"$conf"
         start
-        notify "Bar: btw shell"
+        notify "Switched to the btw shell"
     else
         notify "The btw shell needs quickshell, which isn't installed."
         echo "btw-bar: quickshell isn't installed" >&2

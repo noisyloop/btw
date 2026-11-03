@@ -126,16 +126,19 @@ btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.
   preview's menu. It lists the installed apps from their `.desktop` files (`btw-apps`) and
   starts them with `btw-launch`, which opens terminal apps such as btop in foot. Log out,
   Restart and Shut down are under Power.
+- **Notifications**, in place of mako: cards in the top-right corner with the app's icon,
+  a summary, the body and the app's action buttons. Hovering pauses a card; clicking runs
+  the app's default action; critical ones (amber) stay until closed.
 
-Notifications and the lock screen will move into it next.
-The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
+The lock screen comes next. The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
 has GPU acceleration.
 
-Waybar and fuzzel are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or
-`btw-bar toggle`) switches to the btw shell and back, and remembers the choice in
-`~/.config/btw/bar`. <kbd>Cmd</kbd>+<kbd>Space</kbd> opens whichever menu goes with it. The VM has no GPU,
-so the shell draws with Qt Quick's software renderer. `quickshell` is an optional package:
-if Arch Linux ARM doesn't have it, the image builds without it and the toggle stays on waybar.
+Waybar, fuzzel and mako are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>
+(or `btw-bar toggle`) switches to the btw shell and back, and remembers the choice in
+`~/.config/btw/bar`. <kbd>Cmd</kbd>+<kbd>Space</kbd> opens whichever menu goes with it, and
+mako runs only alongside waybar, since one program at a time can show notifications. The VM
+has no GPU, so the shell draws with Qt Quick's software renderer. Quickshell comes from
+Arch Linux ARM's `extra` repo.
 
 On Linux (arm64 or x86-64 with QEMU installed), `make boot-test` boots the
 built image in QEMU and checks that it logs in, grows its root and powers off.

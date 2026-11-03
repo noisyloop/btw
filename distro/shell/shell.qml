@@ -1,6 +1,6 @@
 // The btw shell: btw's own desktop UI, written for Quickshell.
-// So far: the top bar (a stand-in for waybar) and the app menu (for fuzzel).
-// Notifications and the lock screen move here later.
+// So far: the top bar (in place of waybar), the app menu (fuzzel) and
+// notifications (mako). The lock screen comes next.
 //
 // Run it with `quickshell -p /usr/share/btw/shell`, or switch to it with
 // `btw-bar toggle` (Super+Shift+B).
@@ -19,6 +19,7 @@ ShellRoot {
     }
 
     Launcher {}
+    Toasts {}
 
     // btw-menu (Super+Space) runs `quickshell ipc -p <shell> call menu toggle`.
     IpcHandler {
