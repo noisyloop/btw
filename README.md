@@ -192,6 +192,9 @@ On another distro, check first with `pacman -Qi <package>` ("Required By") befor
   (and prints in the terminal) with the reason. For everything Sway says, run
   `btw-session --foreground` in a terminal; btw then stays attached to it and prints its
   output there. The same output is saved in `~/.local/state/sway.log`.
+- **In a window, your GPU may not allow it** (often with NVIDIA's driver): btw then retries
+  drawing on the CPU by itself. The GPU attempt's log is kept in
+  `~/.local/state/sway.log.gpu`.
 - **Black screen or Sway won't start:** look at `~/.local/state/sway.log`. From a text
   console, `WLR_RENDERER=pixman btw-session` forces CPU drawing, which works on any GPU.
 - **No bar, menu or notifications:** look at `~/.local/state/btw-bar.log`, and press

@@ -20,20 +20,34 @@ foreground=
 config=/usr/share/btw/config/sway/config
 if [ -n "${WAYLAND_DISPLAY:-}" ]; then
     if [ -z "${BTW_DETACHED:-}" ] && [ -z "$foreground" ]; then
-        # Start btw in its own session, then wait a moment to see whether it
-        # stays up: if it quits, say why instead of failing silently.
-        BTW_DETACHED=1 setsid "$0" "$@" </dev/null >/dev/null 2>&1 &
-        pid=$!
-        i=0
-        while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
-            sleep 0.1
-            i=$((i + 1))
-        done
-        if kill -0 "$pid" 2>/dev/null; then
-            exit 0
+        # Start btw in its own session and wait a moment to see whether it
+        # stays up. Sway in a window draws through the desktop around it, and
+        # some GPU drivers (often NVIDIA's) won't let it; if it quits, try
+        # again drawing on the CPU, which always works. If that fails too,
+        # say why instead of failing silently.
+        try() {
+            env BTW_DETACHED=1 "$@" setsid "$0" </dev/null >/dev/null 2>&1 &
+            pid=$!
+            i=0
+            while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
+                sleep 0.1
+                i=$((i + 1))
+            done
+            kill -0 "$pid" 2>/dev/null
+        }
+        try && exit 0
+        if [ -z "${WLR_RENDERER:-}" ]; then
+            cp "$log" "$log.gpu" 2>/dev/null
+            if try WLR_RENDERER=pixman; then
+                echo "btw is running, drawing on the CPU (on the GPU it quit; see $log.gpu)."
+                exit 0
+            fi
         fi
-        reason=$(grep -iE 'error|fail|unable|cannot|could not' "$log" 2>/dev/null | tail -n 3)
-        [ -n "$reason" ] || reason=$(tail -n 3 "$log" 2>/dev/null)
+        # Sway's own messages, not those of the programs it started (swaybg,
+        # waybar, ...), which only report that Sway went away.
+        reason=$(grep -v -e 'swaybg' -e 'waybar' -e 'mako' -e 'quickshell' -e 'foot' "$log" 2>/dev/null |
+            grep -iE 'error|fail|unable|cannot|could not|abort|segmentation' | tail -n 4)
+        [ -n "$reason" ] || reason=$(tail -n 4 "$log" 2>/dev/null)
         echo "btw didn't start. From $log:" >&2
         echo "$reason" >&2
         echo "For the full output, run: btw-session --foreground" >&2
