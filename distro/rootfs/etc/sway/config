@@ -21,9 +21,9 @@ client.focused_inactive #24302a #07080a    #8b978f #24302a   #24302a
 client.unfocused        #24302a #07080a    #8b978f #24302a   #24302a
 client.urgent           #e8a24a #07080a    #e7efe9 #e8a24a   #e8a24a
 
-bar {
-    swaybar_command waybar
-}
+# The top bar: waybar, or the btw shell (Quickshell) while it's tried out.
+# Super+Shift+B switches between them; the choice is kept in ~/.config/btw/bar.
+exec btw-bar start
 
 # Apps
 bindsym $mod+Return exec $term
@@ -60,6 +60,7 @@ bindsym $mod+Shift+5 move container to workspace number 5
 
 # Session
 bindsym $mod+Shift+r reload
+bindsym $mod+Shift+b exec btw-bar toggle
 bindsym $mod+Shift+e exec swaymsg exit
 
 exec mako --config /etc/xdg/mako/config

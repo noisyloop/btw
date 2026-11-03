@@ -112,10 +112,24 @@ palette as the browser preview. Inside the VM window, <kbd>Cmd</kbd> is the Supe
 | <kbd>Cmd</kbd>+<kbd>B</kbd> / <kbd>Cmd</kbd>+<kbd>E</kbd> | Firefox / files |
 | <kbd>Cmd</kbd>+<kbd>W</kbd> | Close window |
 | <kbd>Cmd</kbd>+<kbd>1</kbd>…<kbd>5</kbd> | Switch workspace |
+| <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch the bar: waybar or the btw shell |
 | <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> | Exit to the console |
 
 The config lives in `distro/rootfs/etc/sway/config` and `distro/rootfs/etc/xdg/`, and the
 wallpaper and waybar style in `distro/themes/fractal/`.
+
+#### The btw shell
+
+btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.org), in
+`distro/shell/`. It starts with the top bar, which matches waybar's layout so the two can be
+compared in the VM. The app menu, notifications and lock screen will move into it later.
+The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
+has GPU acceleration.
+
+Waybar is still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or `btw-bar toggle`)
+switches between the two and remembers the choice in `~/.config/btw/bar`. The VM has no GPU,
+so the shell draws with Qt Quick's software renderer. `quickshell` is an optional package:
+if Arch Linux ARM doesn't have it, the image builds without it and the toggle stays on waybar.
 
 On Linux (arm64 or x86-64 with QEMU installed), `make boot-test` boots the
 built image in QEMU and checks that it logs in, grows its root and powers off.
