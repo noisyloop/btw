@@ -1,12 +1,9 @@
 name: Build
 
+# Builds are local (./build-local.sh), so this never runs on its own: no builds
+# on push or pull requests. Run it by hand from the Actions tab ("Run workflow")
+# when you want CI to build, test and publish a release.
 on:
-  push:
-    branches: [main]
-    # Changes to documentation alone don't need a build.
-    paths-ignore: ["**.md", "docs/**"]
-  pull_request:
-    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
 
 permissions:
@@ -72,7 +69,8 @@ jobs:
   release:
     name: Release
     needs: [macos, image]
-    if: github.event_name == 'push'
+    # Releases come from main only; runs on other branches just build and test.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

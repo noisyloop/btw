@@ -87,6 +87,7 @@ ready-made disk. So:
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
 - [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
       factory disk, boot-tests the disk in QEMU, and publishes a release when
-      the version in `app/Info.plist` changes.
+      the version in `app/Info.plist` changes. It runs only when started by
+      hand; day-to-day builds are local (`./build-local.sh`).
 - [ ] **M5: ship.** Developer ID signing and notarization, and an app that
       downloads the latest factory disk from releases on first run.
