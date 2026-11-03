@@ -1,0 +1,77 @@
+#!/bin/sh
+# Starts the btw top bar: waybar, or the btw shell (Quickshell) while it is
+# being tried out. The choice is saved in ~/.config/btw/bar.
+#
+#   btw-bar start    start the chosen bar (Sway runs this at login)
+#   btw-bar toggle   switch between waybar and the btw shell (Super+Shift+B)
+#   btw-bar which    print the chosen bar
+set -u
+
+conf="${XDG_CONFIG_HOME:-$HOME/.config}/btw/bar"
+shell=/usr/share/btw/shell
+log="$HOME/.local/state/btw-bar.log"
+
+chosen() {
+    if [ "$(cat "$conf" 2>/dev/null)" = shell ] && command -v quickshell >/dev/null; then
+        echo shell
+    else
+        echo waybar
+    fi
+}
+
+stop() {
+    pkill -x waybar
+    pkill -f "quickshell -p $shell"
+    # Wait for the old bar to give up its space on screen.
+    i=0
+    while { pgrep -x waybar || pgrep -f "quickshell -p $shell"; } >/dev/null && [ $i -lt 20 ]; do
+        sleep 0.1
+        i=$((i + 1))
+    done
+}
+
+start() {
+    stop
+    mkdir -p "$(dirname "$log")"
+    if [ "$(chosen)" = shell ]; then
+        # The VM has no GPU, so Qt Quick draws with its software renderer
+        # instead of OpenGL on llvmpipe. Set QT_QUICK_BACKEND to override.
+        QT_QUICK_BACKEND="${QT_QUICK_BACKEND:-software}" QT_QPA_PLATFORM=wayland \
+            setsid quickshell -p "$shell" >"$log" 2>&1 </dev/null &
+    else
+        setsid waybar >"$log" 2>&1 </dev/null &
+    fi
+}
+
+notify() {
+    command -v notify-send >/dev/null && notify-send -t 2000 "btw" "$1"
+}
+
+case "${1:-start}" in
+start)
+    start
+    ;;
+toggle)
+    mkdir -p "$(dirname "$conf")"
+    if [ "$(chosen)" = shell ]; then
+        echo waybar >"$conf"
+        start
+        notify "Bar: waybar"
+    elif command -v quickshell >/dev/null; then
+        echo shell >"$conf"
+        start
+        notify "Bar: btw shell"
+    else
+        notify "The btw shell needs quickshell, which isn't installed."
+        echo "btw-bar: quickshell isn't installed" >&2
+        exit 1
+    fi
+    ;;
+which)
+    chosen
+    ;;
+*)
+    echo "usage: btw-bar [start|toggle|which]" >&2
+    exit 2
+    ;;
+esac
