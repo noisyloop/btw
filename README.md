@@ -118,13 +118,22 @@ wallpaper and waybar style in `distro/themes/fractal/`.
 #### The btw shell
 
 btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.org), in
-`distro/shell/`. It starts with the top bar, which matches waybar's layout so the two can be
-compared in the VM. The app menu, notifications and lock screen will move into it later.
+`distro/shell/`. So far it has:
+
+- **The top bar**, which matches waybar's layout so the two can be compared in the VM.
+- **The app menu** (<kbd>Cmd</kbd>+<kbd>Space</kbd> or the ▲ btw button): search, tabs
+  (Internet, Media, Office, Tools, System, Power) and keyboard navigation, like the browser
+  preview's menu. It lists the installed apps from their `.desktop` files (`btw-apps`) and
+  starts them with `btw-launch`, which opens terminal apps such as btop in foot. Log out,
+  Restart and Shut down are under Power.
+
+Notifications and the lock screen will move into it next.
 The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
 has GPU acceleration.
 
-Waybar is still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or `btw-bar toggle`)
-switches between the two and remembers the choice in `~/.config/btw/bar`. The VM has no GPU,
+Waybar and fuzzel are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or
+`btw-bar toggle`) switches to the btw shell and back, and remembers the choice in
+`~/.config/btw/bar`. <kbd>Cmd</kbd>+<kbd>Space</kbd> opens whichever menu goes with it. The VM has no GPU,
 so the shell draws with Qt Quick's software renderer. `quickshell` is an optional package:
 if Arch Linux ARM doesn't have it, the image builds without it and the toggle stays on waybar.
 

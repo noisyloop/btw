@@ -17,6 +17,8 @@ foot
 fuzzel
 mako
 libnotify
+# Lets the logged-in user restart and shut down from the app menu.
+polkit
 firefox
 thunar
 mousepad

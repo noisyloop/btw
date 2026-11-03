@@ -52,7 +52,7 @@ PanelWindow {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Sway.dispatch("exec fuzzel")
+                onClicked: AppMenu.toggle()
             }
         }
 

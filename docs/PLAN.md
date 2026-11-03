@@ -80,9 +80,9 @@ ready-made disk. So:
 - [ ] **btw shell.** btw's own front end in QML on Quickshell (`distro/shell/`),
       the way Pond builds on niri. It is kept independent of the compositor:
       only `Sway.qml` talks to Sway, so it can move to niri with btw. Steps:
-      the top bar next to waybar behind a toggle (done, needs a test in the
-      VM for CPU use), then the app menu, notifications and lock screen,
-      replacing waybar, fuzzel and mako one at a time.
+      the top bar next to waybar behind a toggle (done), the app menu in
+      place of fuzzel (done), both needing a test in the VM for CPU use; then
+      notifications and the lock screen, replacing mako and adding locking.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
 - [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
