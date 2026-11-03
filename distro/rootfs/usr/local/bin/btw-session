@@ -3,6 +3,21 @@
 # screen (the "btw" session) or from a text console. Exiting the desktop
 # (Super+Shift+E) returns to wherever it was started from.
 #
+# Started inside another desktop (e.g. from Omarchy's app menu or terminal),
+# btw opens in a window instead. It detaches, so closing the terminal doesn't
+# close btw, and it uses Alt where it would use Super, since the desktop
+# around it keeps the Super shortcuts. Leave it with Alt+Shift+E.
+config=/usr/share/btw/config/sway/config
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    if [ -z "${BTW_DETACHED:-}" ]; then
+        BTW_DETACHED=1 setsid -f "$0" "$@" </dev/null >/dev/null 2>&1
+        exit 0
+    fi
+    window="${XDG_RUNTIME_DIR:-/tmp}/btw-window.conf"
+    sed 's/^set \$mod Mod4$/set $mod Mod1/' "$config" >"$window"
+    config=$window
+fi
+
 # Without a real GPU (the Mac VM's virtio-gpu, or no render node at all),
 # wlroots renders with pixman on the CPU and draws its own cursor.
 gpu=
@@ -30,4 +45,4 @@ set --
 [ -d /sys/module/nvidia_drm ] && set -- --unsupported-gpu
 
 mkdir -p "$HOME/.local/state"
-exec sway "$@" --config /usr/share/btw/config/sway/config >"$HOME/.local/state/sway.log" 2>&1
+exec sway "$@" --config "$config" >"$HOME/.local/state/sway.log" 2>&1

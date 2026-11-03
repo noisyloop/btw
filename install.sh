@@ -71,14 +71,20 @@ fi
 
 step "Installing btw"
 sudo distro/install-files.sh /
+# So app menus find the new icon right away.
+if command -v gtk-update-icon-cache >/dev/null; then
+  sudo gtk-update-icon-cache -qtf /usr/share/icons/hicolor || true
+fi
 note "scripts in /usr/local/bin, everything else in /usr/share/btw"
 
 step "Done"
-note "Log out and choose \"btw\" on the login screen (the session menu is"
-note "usually a button or a gear icon). Or switch to a text console with"
-note "Ctrl+Alt+F3, log in, and run: btw-session"
+note "Try it in a window: open btw from your app menu (or run btw-session)."
+note "There it uses Alt instead of Super: Alt+Space apps, Alt+Enter terminal,"
+note "Alt+Shift+E closes it."
 note ""
-note "In btw: Super+Space apps, Super+Enter terminal, Super+Shift+B switches to"
+note "Or as your whole desktop: log out and choose \"btw\" on the login screen,"
+note "or switch to a text console (Ctrl+Alt+F3), log in, and run: btw-session"
+note "There: Super+Space apps, Super+Enter terminal, Super+Shift+B switches to"
 note "the btw shell (bar, menu, notifications), Super+Shift+E leaves btw."
 if [[ -d "$HOME/.local/share/omarchy" ]]; then
   note ""

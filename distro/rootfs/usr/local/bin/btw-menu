@@ -2,9 +2,9 @@
 # Opens or closes the btw app menu (Super+Space). When the btw shell is
 # running, its menu is used; otherwise fuzzel.
 shell=/usr/share/btw/shell
-if pgrep -f "quickshell -p $shell" >/dev/null; then
+if [ "$(btw-bar running)" = shell ]; then
     exec quickshell ipc -p "$shell" call menu toggle
 fi
-# fuzzel closes itself if it's already open.
-pkill -x fuzzel && exit 0
+# A second press closes btw's fuzzel (and only btw's).
+pkill -f "fuzzel --config /usr/share/btw/config/" && exit 0
 exec fuzzel --config /usr/share/btw/config/fuzzel/fuzzel.ini

@@ -6,6 +6,11 @@
 #   btw-bar start    start the chosen bar (Sway runs this at login)
 #   btw-bar toggle   switch between waybar and the btw shell (Super+Shift+B)
 #   btw-bar which    print the chosen bar
+#   btw-bar running  print what's running in this btw session (shell, waybar or nothing)
+#
+# It stops only the programs it started itself, in this btw session (they're
+# kept in a file per Sway instance), so a waybar or mako belonging to another
+# desktop, such as Omarchy's Hyprland, is never touched.
 set -u
 
 conf="${XDG_CONFIG_HOME:-$HOME/.config}/btw/bar"
@@ -13,6 +18,8 @@ shell=/usr/share/btw/shell
 # btw's own configs, so a user's ~/.config/waybar and mako are left alone.
 btwconf=/usr/share/btw/config
 log="$HOME/.local/state/btw-bar.log"
+# The programs this btw session started: "<kind> <pid>" per line.
+pids="${XDG_RUNTIME_DIR:-/tmp}/btw-bar.$(basename "${SWAYSOCK:-default}").pids"
 
 chosen() {
     if [ "$(cat "$conf" 2>/dev/null)" = shell ] && command -v quickshell >/dev/null; then
@@ -22,30 +29,50 @@ chosen() {
     fi
 }
 
+# PIDs from the file that are still the programs btw started (a PID can be
+# reused once a program exits, so check its command line too).
+ours() {
+    [ -f "$pids" ] || return 0
+    while read -r kind pid; do
+        case "$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null)" in
+        *"quickshell -p $shell"* | *"$btwconf/"*) echo "$kind $pid" ;;
+        esac
+    done <"$pids"
+}
+
 stop() {
-    pkill -x waybar
-    pkill -x mako
-    pkill -f "quickshell -p $shell"
+    list=$(ours)
+    [ -n "$list" ] && kill $(echo "$list" | cut -d' ' -f2) 2>/dev/null
     # Wait for the old bar to give up its space on screen and the
     # notification service name.
     i=0
-    while { pgrep -x waybar || pgrep -x mako || pgrep -f "quickshell -p $shell"; } >/dev/null && [ $i -lt 20 ]; do
+    while [ -n "$(ours)" ] && [ $i -lt 20 ]; do
         sleep 0.1
         i=$((i + 1))
     done
+    rm -f "$pids"
 }
 
 start() {
     stop
     mkdir -p "$(dirname "$log")"
+    mkdir -p "$(dirname "$pids")"
     if [ "$(chosen)" = shell ]; then
-        # The VM has no GPU, so Qt Quick draws with its software renderer
-        # instead of OpenGL on llvmpipe. Set QT_QUICK_BACKEND to override.
-        QT_QUICK_BACKEND="${QT_QUICK_BACKEND:-software}" QT_QPA_PLATFORM=wayland \
+        # Without a GPU (Sway drawing with pixman, as in the Mac VM), Qt Quick
+        # uses its software renderer too. Set QT_QUICK_BACKEND to override.
+        backend=${QT_QUICK_BACKEND:-}
+        [ "${WLR_RENDERER:-}" = pixman ] && backend=${backend:-software}
+        QT_QUICK_BACKEND=$backend QT_QPA_PLATFORM=wayland \
             setsid quickshell -p "$shell" >"$log" 2>&1 </dev/null &
+        echo "shell $!" >>"$pids"
     else
         setsid waybar -c "$btwconf/waybar/config.jsonc" -s "$btwconf/waybar/style.css" >"$log" 2>&1 </dev/null &
+        echo "waybar $!" >>"$pids"
+        # If another desktop's notification service is running (e.g. Omarchy's
+        # mako, when btw runs alongside it), this mako exits and notifications
+        # keep showing there.
         setsid mako --config "$btwconf/mako/config" >>"$log" 2>&1 </dev/null &
+        echo "mako $!" >>"$pids"
     fi
 }
 
@@ -78,8 +105,11 @@ toggle)
 which)
     chosen
     ;;
+running)
+    ours | cut -d' ' -f1 | grep -m1 -E '^(shell|waybar)$'
+    ;;
 *)
-    echo "usage: btw-bar [start|toggle|which]" >&2
+    echo "usage: btw-bar [start|toggle|which|running]" >&2
     exit 2
     ;;
 esac

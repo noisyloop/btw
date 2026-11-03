@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=btw
+GenericName=Desktop
+Comment=Open the btw desktop in a window (Alt+Shift+E closes it)
+Exec=/usr/local/bin/btw-session
+Icon=btw
+Categories=System;
+Keywords=sway;desktop;btw;
+# Not inside btw itself.
+NotShowIn=sway;

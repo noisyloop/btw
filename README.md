@@ -91,17 +91,35 @@ If pacman says it can't find a package version, your package lists are out of da
 
 ### Start btw
 
+There are two ways to run btw: in a window inside your current desktop, to try it out,
+or as your whole desktop.
+
+**In a window** (the quickest way to try it):
+
+- Open **btw** from your app menu (on Omarchy, <kbd>Super</kbd>+<kbd>Space</kbd> and type
+  "btw"). Running `btw-session` in a terminal does the same, and btw keeps running if you
+  close the terminal.
+- Inside the window btw uses <kbd>Alt</kbd> where it would use <kbd>Super</kbd>, because your
+  desktop keeps the Super shortcuts: <kbd>Alt</kbd>+<kbd>Space</kbd> apps,
+  <kbd>Alt</kbd>+<kbd>Enter</kbd> terminal, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> closes it.
+- Notifications keep showing in your desktop (e.g. Omarchy's), since it already runs one.
+
+**As your whole desktop:**
+
 - **From the login screen:** log out, open the session menu (usually a button or gear icon
   near the password box), choose **btw** and log in.
 - **From a text console:** press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F3</kbd>, log in, and run
   `btw-session`. Return to your normal desktop with <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F1</kbd>
   (or <kbd>F2</kbd>).
 
-**On Omarchy:** Hyprland and Omarchy's setup are untouched. If Omarchy logs you straight in
-without a login screen, use the text console way. If you do get a login screen, pick
-**btw** there; choosing Hyprland again takes you back to Omarchy.
+**On Omarchy:** Hyprland and Omarchy's setup are untouched, and btw never stops Omarchy's
+waybar or mako. If Omarchy logs you straight in without a login screen, use the app menu or
+the text console way. If you do get a login screen, pick **btw** there; choosing Hyprland
+again takes you back to Omarchy.
 
 ### Use it
+
+As a whole desktop (in a window, use <kbd>Alt</kbd> instead of <kbd>Super</kbd>):
 
 | Keys | Action |
 |---|---|
@@ -138,8 +156,8 @@ cd btw
 ./install.sh --uninstall
 ```
 
-This deletes every file btw installed (the scripts, `/usr/share/btw`, the wallpaper and the
-login-screen entry) and leaves your packages alone. To clear btw's remembered settings and
+This deletes every file btw installed (the scripts, `/usr/share/btw`, the wallpaper, the
+icon, and the app-menu and login-screen entries) and leaves your packages alone. To clear btw's remembered settings and
 logs too:
 
 ```sh
