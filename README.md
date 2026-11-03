@@ -1,7 +1,6 @@
 <h1 align="center">btw</h1>
 
 <p align="center">
-  <a href="https://github.com/noisyloop/btw/actions/workflows/build.yml"><img src="https://github.com/noisyloop/btw/actions/workflows/build.yml/badge.svg?branch=main" alt="Build status"></a>
   <a href="https://github.com/noisyloop/btw/releases/latest"><img src="https://img.shields.io/github/v/release/noisyloop/btw?label=release" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20(Apple%20silicon)-blue" alt="macOS on Apple silicon">
 </p>
@@ -17,9 +16,7 @@ A native macOS launcher that boots btw in a VM on Apple silicon.</p>
 > an app menu (<kbd>Cmd</kbd>+<kbd>Space</kbd>), a terminal (<kbd>Cmd</kbd>+<kbd>Enter</kbd>),
 > Firefox, a file manager and an editor. Open **btw.app** and choose **Boot btw**: the
 > first boot downloads the btw disk image once and copies it into your VM. Until the
-> first release is out, get the dmg and `btw-factory.tar.gz` from **Artifacts** on the
-> latest [Build run](https://github.com/noisyloop/btw/actions/workflows/build.yml), and
-> choose the disk image when the app asks.
+> first release is out, build both yourself with `./build-local.sh` (below).
 
 The current milestone is proving the hardest part: **booting a Linux VM from
 Swift on an M1**. See [docs/PLAN.md](docs/PLAN.md) for the full roadmap.
@@ -121,23 +118,37 @@ wallpaper and waybar style in `distro/themes/fractal/`.
 #### The btw shell
 
 btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.org), in
-`distro/shell/`. It starts with the top bar, which matches waybar's layout so the two can be
-compared in the VM. The app menu, notifications and lock screen will move into it later.
-The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
+`distro/shell/`. So far it has:
+
+- **The top bar**, which matches waybar's layout so the two can be compared in the VM.
+- **The app menu** (<kbd>Cmd</kbd>+<kbd>Space</kbd> or the ▲ btw button): search, tabs
+  (Internet, Media, Office, Tools, System, Power) and keyboard navigation, like the browser
+  preview's menu. It lists the installed apps from their `.desktop` files (`btw-apps`) and
+  starts them with `btw-launch`, which opens terminal apps such as btop in foot. Log out,
+  Restart and Shut down are under Power.
+- **Notifications**, in place of mako: cards in the top-right corner with the app's icon,
+  a summary, the body and the app's action buttons. Hovering pauses a card; clicking runs
+  the app's default action; critical ones (amber) stay until closed.
+
+The lock screen comes next. The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
 has GPU acceleration.
 
-Waybar is still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or `btw-bar toggle`)
-switches between the two and remembers the choice in `~/.config/btw/bar`. The VM has no GPU,
-so the shell draws with Qt Quick's software renderer. `quickshell` is an optional package:
-if Arch Linux ARM doesn't have it, the image builds without it and the toggle stays on waybar.
+Waybar, fuzzel and mako are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>
+(or `btw-bar toggle`) switches to the btw shell and back, and remembers the choice in
+`~/.config/btw/bar`. <kbd>Cmd</kbd>+<kbd>Space</kbd> opens whichever menu goes with it, and
+mako runs only alongside waybar, since one program at a time can show notifications. The VM
+has no GPU, so the shell draws with Qt Quick's software renderer. Quickshell comes from
+Arch Linux ARM's `extra` repo.
 
 On Linux (arm64 or x86-64 with QEMU installed), `make boot-test` boots the
 built image in QEMU and checks that it logs in, grows its root and powers off.
 
 ## How it's built and released
 
-Like [Fleet-51](https://github.com/noisyloop/Fleet-51), one GitHub Actions
-workflow (`.github/workflows/build.yml`) does everything:
+Builds are local: `./build-local.sh` makes the app and the disk image on your Mac.
+CI doesn't run on pushes or pull requests. The GitHub Actions workflow
+(`.github/workflows/build.yml`) only runs when started by hand from the Actions tab
+("Run workflow"), and then does everything:
 
 - **macOS app:** builds, signs and packages `btw-macos.dmg` on an Apple silicon
   runner, then checks its signature and entitlement. Hosted Mac runners can't
@@ -145,9 +156,9 @@ workflow (`.github/workflows/build.yml`) does everything:
   `btw check` passes.
 - **Factory disk:** builds `btw-factory.img` on an arm64 Linux runner and
   boot-tests it in QEMU.
-- **Release:** bump `CFBundleShortVersionString` in `app/Info.plist` and merge
-  to main. CI then publishes `v<version>` with both files, and the download
-  links above point to it.
+- **Release:** bump `CFBundleShortVersionString` in `app/Info.plist`, then run
+  the workflow on main. It publishes `v<version>` with both files, and the
+  download links above point to it.
 
 ## Package as an app
 
@@ -182,7 +193,7 @@ binaries can run in the arm64 guest.
 
 ```
 desktop/    browser preview of the btw desktop (temporary)
-.github/    CI: build, test and release (dmg + disk image)
+.github/    CI, run by hand: build, test and release (dmg + disk image)
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
 assets/     art for the app (an AppIcon.png here becomes the app icon)

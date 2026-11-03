@@ -16,7 +16,11 @@ waybar
 foot
 fuzzel
 mako
+# Runs the btw shell (distro/shell): bar, app menu and notifications.
+quickshell
 libnotify
+# Lets the logged-in user restart and shut down from the app menu.
+polkit
 firefox
 thunar
 mousepad
@@ -24,8 +28,3 @@ fastfetch
 btop
 ttf-ibm-plex
 ttf-dejavu
-
-# Optional: installed when the Arch Linux ARM repos have them, skipped with a
-# warning otherwise, so a missing package doesn't break the image.
-#   quickshell: runs the btw shell (distro/shell), tried out next to waybar.
-optional: quickshell

@@ -80,13 +80,15 @@ ready-made disk. So:
 - [ ] **btw shell.** btw's own front end in QML on Quickshell (`distro/shell/`),
       the way Pond builds on niri. It is kept independent of the compositor:
       only `Sway.qml` talks to Sway, so it can move to niri with btw. Steps:
-      the top bar next to waybar behind a toggle (done, needs a test in the
-      VM for CPU use), then the app menu, notifications and lock screen,
-      replacing waybar, fuzzel and mako one at a time.
+      the top bar next to waybar behind a toggle, the app menu in place of
+      fuzzel and notifications in place of mako (all done, needing a test in
+      the VM for CPU use); then the lock screen; then making the shell the
+      default and dropping waybar, fuzzel and mako.
 - [ ] **Fractal identity.** A generator for the icon (`assets/AppIcon.png`),
       the systemd-boot/Plymouth splash, wallpapers and a matching color theme.
 - [x] **CI and releases, like Fleet-51.** One workflow builds the dmg and the
       factory disk, boot-tests the disk in QEMU, and publishes a release when
-      the version in `app/Info.plist` changes.
+      the version in `app/Info.plist` changes. It runs only when started by
+      hand; day-to-day builds are local (`./build-local.sh`).
 - [ ] **M5: ship.** Developer ID signing and notarization, and an app that
       downloads the latest factory disk from releases on first run.

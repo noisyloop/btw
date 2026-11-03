@@ -17,17 +17,8 @@ trap 'rm -rf "$work"' EXIT
 mkdir -p "$root" "$esp" "$out"
 
 # --- rootfs -----------------------------------------------------------------
-mapfile -t packages < <(grep -Ev '^\s*(#|$|optional:)' "$src/packages.txt")
-mapfile -t optional < <(sed -n 's/^optional:\s*//p' "$src/packages.txt")
+mapfile -t packages < <(grep -Ev '^\s*(#|$)' "$src/packages.txt")
 pacstrap -c "$root" "${packages[@]}"
-# Optional packages may not be built for aarch64 yet; the image works without them.
-for pkg in "${optional[@]}"; do
-  if pacman --dbpath "$root/var/lib/pacman" -Si "$pkg" >/dev/null 2>&1; then
-    pacstrap -c "$root" "$pkg"
-  else
-    echo "::warning::optional package $pkg is not in the Arch Linux ARM repos; skipped"
-  fi
-done
 
 # Plain -r so files end up owned by root, not by whoever owns the checkout.
 cp -r "$src/rootfs/." "$root/"

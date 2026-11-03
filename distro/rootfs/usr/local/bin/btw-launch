@@ -1,0 +1,40 @@
+#!/bin/sh
+# Starts an app from its desktop id (e.g. firefox, org.gnome.Mousepad), the way
+# the btw app menu does. Apps with Terminal=true open in foot.
+#   btw-launch <desktop-id>
+set -u
+[ $# -eq 1 ] || { echo "usage: btw-launch <desktop-id>" >&2; exit 2; }
+id=$1
+
+dirs="${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+file=
+IFS=:
+for d in $dirs; do
+    # An id like org-foo-bar may live at org/foo/bar.desktop; try it as is first.
+    if [ -f "$d/applications/$id.desktop" ]; then
+        file="$d/applications/$id.desktop"
+        break
+    fi
+    f=$(find "$d/applications" -name '*.desktop' 2>/dev/null | while read -r p; do
+        rel=${p#"$d/applications/"}
+        [ "$(printf '%s' "${rel%.desktop}" | tr / -)" = "$id" ] && { echo "$p"; break; }
+    done)
+    [ -n "$f" ] && { file=$f; break; }
+done
+unset IFS
+[ -n "$file" ] || { echo "btw-launch: no app called $id" >&2; exit 1; }
+
+# Exec and Terminal from the [Desktop Entry] section.
+exec_line=$(awk '/^\[/{s=($0=="[Desktop Entry]");next} s&&/^Exec=/{print substr($0,6);exit}' "$file")
+terminal=$(awk '/^\[/{s=($0=="[Desktop Entry]");next} s&&/^Terminal=/{print substr($0,10);exit}' "$file")
+[ -n "$exec_line" ] || { echo "btw-launch: $id has no Exec line" >&2; exit 1; }
+
+# Drop field codes (%f, %U, ...): the menu opens apps without files.
+cmd=$(printf '%s' "$exec_line" | sed -e 's/%[fFuUdDnNickvm]//g' -e 's/%%/%/g')
+
+cd "$HOME" || true
+if [ "$terminal" = true ]; then
+    exec setsid foot -e sh -c "$cmd" </dev/null >/dev/null 2>&1
+else
+    exec setsid sh -c "exec $cmd" </dev/null >/dev/null 2>&1
+fi

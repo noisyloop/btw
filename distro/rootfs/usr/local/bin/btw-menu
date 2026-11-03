@@ -1,0 +1,10 @@
+#!/bin/sh
+# Opens or closes the btw app menu (Super+Space). When the btw shell is
+# running, its menu is used; otherwise fuzzel.
+shell=/usr/share/btw/shell
+if pgrep -f "quickshell -p $shell" >/dev/null; then
+    exec quickshell ipc -p "$shell" call menu toggle
+fi
+# fuzzel closes itself if it's already open.
+pkill -x fuzzel && exit 0
+exec fuzzel
