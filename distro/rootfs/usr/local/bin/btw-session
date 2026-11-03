@@ -1,17 +1,20 @@
 #!/bin/sh
-# Starts the btw desktop: Sway with btw's own config. Runs from the login
-# screen (the "btw" session) or from a text console. Exiting the desktop
-# (Super+Shift+E) returns to wherever it was started from.
+# Starts the btw desktop: Sway with btw's own config.
 #
-# Started inside another desktop (e.g. from Omarchy's app menu or terminal),
-# btw opens in a window instead. It detaches, so closing the terminal doesn't
-# close btw, and it uses Alt where it would use Super, since the desktop
-# around it keeps the Super shortcuts. Leave it with Alt+Shift+E.
+# From the login screen (the "btw" session) or a text console, btw is the
+# whole desktop. Super+Shift+E leaves it.
 #
-#   btw-session               start btw (detached when inside another desktop)
-#   btw-session --foreground  stay attached and print everything, for debugging
+# Inside another desktop (e.g. Omarchy), btw opens in a window, using Alt
+# where it would use Super, since the desktop around it keeps the Super
+# shortcuts. Alt+Shift+E closes it.
+#   - From the app menu, it runs like any other app.
+#   - From a terminal, it detaches, so closing the terminal doesn't close it.
 #
-# If btw doesn't come up, the reason is shown (and is in ~/.local/state/sway.log).
+#   btw-session               start btw
+#   btw-session --foreground  stay in the terminal and print everything
+#
+# Sway's output is in ~/.local/state/sway.log; if btw quits with an error,
+# a notification says why.
 log="$HOME/.local/state/sway.log"
 mkdir -p "$HOME/.local/state"
 foreground=
@@ -19,53 +22,11 @@ foreground=
 
 config=/usr/share/btw/config/sway/config
 if [ -n "${WAYLAND_DISPLAY:-}" ]; then
-    if [ -z "${BTW_DETACHED:-}" ] && [ -z "$foreground" ]; then
-        # Start btw in its own session and wait a moment to see whether it
-        # stays up. Sway in a window draws through the desktop around it, and
-        # some GPU drivers (often NVIDIA's) won't let it; if it quits, try
-        # again drawing on the CPU, which always works. If that fails too,
-        # say why instead of failing silently.
-        i0=0
-        try() {
-            # In its own systemd scope when it can: app launchers (Omarchy's
-            # included) run each app in a unit they clean up afterwards, which
-            # would take btw down with it. From a terminal it works either way.
-            if command -v systemd-run >/dev/null && [ -S "${XDG_RUNTIME_DIR:-/nonexistent}/systemd/private" ]; then
-                scope="systemd-run --user --scope --quiet --collect --unit=btw-window-$$-$i0"
-            else
-                scope=
-            fi
-            i0=$((i0 + 1))
-            env BTW_DETACHED=1 "$@" $scope setsid "$0" </dev/null >/dev/null 2>&1 &
-            pid=$!
-            i=0
-            while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
-                sleep 0.1
-                i=$((i + 1))
-            done
-            kill -0 "$pid" 2>/dev/null
-        }
-        try && exit 0
-        if [ -z "${WLR_RENDERER:-}" ]; then
-            cp "$log" "$log.gpu" 2>/dev/null
-            if try WLR_RENDERER=pixman; then
-                echo "btw is running, drawing on the CPU (on the GPU it quit; see $log.gpu)."
-                exit 0
-            fi
-        fi
-        # Sway's own messages, not those of the programs it started (swaybg,
-        # waybar, ...), which only report that Sway went away.
-        reason=$(grep -v -e 'swaybg' -e 'waybar' -e 'mako' -e 'quickshell' -e 'foot' "$log" 2>/dev/null |
-            grep -iE 'error|fail|unable|cannot|could not|abort|segmentation|sway (exited|was stopped)' | tail -n 4)
-        [ -n "$reason" ] || reason=$(tail -n 4 "$log" 2>/dev/null)
-        echo "btw didn't start. From $log:" >&2
-        echo "$reason" >&2
-        echo "For the full output, run: btw-session --foreground" >&2
-        command -v notify-send >/dev/null &&
-            notify-send -u critical "btw didn't start" "$reason
-
-Details: $log, or run btw-session --foreground in a terminal."
-        exit 1
+    # Typed in a terminal: hand btw off and give the terminal back.
+    if [ -t 0 ] && [ -z "$foreground" ]; then
+        setsid -f "$0" </dev/null >/dev/null 2>&1
+        echo "btw is opening in a window. Alt+Shift+E closes it."
+        exit 0
     fi
     # Alt instead of Super, and without /etc/sway/config.d: Arch's
     # 50-systemd-user.conf there tells the whole login that the desktop is
@@ -102,8 +63,14 @@ export QT_QPA_PLATFORM="wayland;xcb"
 set --
 [ -d /sys/module/nvidia_drm ] && set -- --unsupported-gpu
 
+if ! command -v sway >/dev/null; then
+    echo "sway isn't installed; run ./install.sh again" >&2
+    command -v notify-send >/dev/null && notify-send -u critical "btw" "sway isn't installed; run ./install.sh again"
+    exit 1
+fi
+
 # What btw-session decided, at the top of the log, then Sway's own output.
-{
+header() {
     echo "btw-session $(date '+%F %T')"
     if [ -n "${WAYLAND_DISPLAY:-}" ]; then
         echo "  in a window, inside $WAYLAND_DISPLAY"
@@ -112,20 +79,26 @@ set --
     fi
     echo "  renderer: ${WLR_RENDERER:-GPU} ${*:+(sway $*)}"
     echo "  config: $config"
-    echo "  sway: $(command -v sway || echo 'not installed')"
-    echo "  started in: $(sed -n 's/^0:://p' /proc/self/cgroup 2>/dev/null)"
-} >"$log"
-if ! command -v sway >/dev/null; then
-    echo "sway isn't installed; run ./install.sh again" | tee -a "$log" >&2
-    exit 1
-fi
+}
+
 if [ -n "$foreground" ]; then
+    header "$@" >"$log"
     sway "$@" --config "$config" 2>&1 | tee -a "$log"
     exit
 fi
-if [ -n "${BTW_DETACHED:-}" ]; then
-    # In a window, note how Sway ended: an error, a clean exit, or a signal
-    # from something else stopping it.
+
+# Full screen: Sway is the session, nothing to come back to.
+if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    header "$@" >"$log"
+    exec sway "$@" --config "$config" >>"$log" 2>&1
+fi
+
+# In a window: run Sway, and if it quits with an error, say why. If it fails
+# straight away on the GPU (some drivers don't allow Sway inside another
+# desktop), try once more drawing on the CPU.
+run() {
+    header "$@" >"$log"
+    started=$(date +%s)
     sway "$@" --config "$config" >>"$log" 2>&1
     status=$?
     if [ $status -gt 128 ]; then
@@ -133,6 +106,27 @@ if [ -n "${BTW_DETACHED:-}" ]; then
     else
         echo "sway exited with status $status" >>"$log"
     fi
-    exit $status
+    return $status
+}
+
+run "$@"
+status=$?
+if [ $status -ne 0 ] && [ -z "${WLR_RENDERER:-}" ] && [ $(($(date +%s) - started)) -lt 5 ]; then
+    cp "$log" "$log.gpu"
+    export WLR_RENDERER=pixman
+    run "$@"
+    status=$?
 fi
-exec sway "$@" --config "$config" >>"$log" 2>&1
+
+# 0 is a normal close (Alt+Shift+E or closing the window).
+if [ $status -ne 0 ]; then
+    # Sway's own messages, not those of the programs it started (swaybg,
+    # waybar, ...), which only report that Sway went away.
+    reason=$(grep -v -e 'swaybg' -e 'waybar' -e 'mako' -e 'quickshell' -e 'foot' "$log" |
+        grep -iE 'error|fail|unable|cannot|could not|abort|sway (exited|was stopped)' | tail -n 4)
+    command -v notify-send >/dev/null &&
+        notify-send -u critical "btw closed unexpectedly" "$reason
+
+Details: $log"
+fi
+exit $status
