@@ -1,8 +1,10 @@
 # btw desktop: Sway with the fractal theme (palette from distro/themes/fractal).
+# btw-session starts Sway with this file from /usr/share/btw/config, so it
+# doesn't use (or change) a ~/.config/sway set up for another desktop.
 # Super is the Mac's Command key inside the VM window.
 
 set $mod Mod4
-set $term foot
+set $term foot --config /usr/share/btw/config/foot/foot.ini
 set $menu btw-menu
 
 font pango:IBM Plex Sans 10
@@ -30,8 +32,8 @@ exec btw-bar start
 bindsym $mod+Return exec $term
 bindsym $mod+space exec $menu
 bindsym $mod+d exec $menu
-bindsym $mod+b exec firefox
-bindsym $mod+e exec thunar
+bindsym $mod+b exec btw-open browser
+bindsym $mod+e exec btw-open files
 
 # Windows
 bindsym $mod+w kill
@@ -64,6 +66,6 @@ bindsym $mod+Shift+r reload
 bindsym $mod+Shift+b exec btw-bar toggle
 bindsym $mod+Shift+e exec swaymsg exit
 
-exec $term sh -c 'fastfetch; exec bash'
+exec $term sh -c 'command -v fastfetch >/dev/null && fastfetch; exec "${SHELL:-bash}"'
 
 include /etc/sway/config.d/*

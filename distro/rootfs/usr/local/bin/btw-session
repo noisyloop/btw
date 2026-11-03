@@ -1,10 +1,33 @@
 #!/bin/sh
-# Starts the btw desktop on the VM's virtio-gpu display. The VM has no GPU
-# acceleration, so wlroots renders with pixman (on the CPU) and draws its own
-# cursor. Exiting the desktop (Super+Shift+E) drops back to this console.
-export WLR_RENDERER=pixman
-export WLR_NO_HARDWARE_CURSORS=1
+# Starts the btw desktop: Sway with btw's own config. Runs from the login
+# screen (the "btw" session) or from a text console. Exiting the desktop
+# (Super+Shift+E) returns to wherever it was started from.
+#
+# Without a real GPU (the Mac VM's virtio-gpu, or no render node at all),
+# wlroots renders with pixman on the CPU and draws its own cursor.
+gpu=
+for d in /sys/class/drm/card[0-9]*/device/driver; do
+    [ -e "$d" ] || continue
+    case "$(basename "$(readlink "$d")")" in
+    virtio_gpu | virtio-pci) ;;
+    *) gpu=yes ;;
+    esac
+done
+[ -e /dev/dri/renderD128 ] || gpu=
+if [ -z "$gpu" ]; then
+    export WLR_RENDERER="${WLR_RENDERER:-pixman}"
+    export WLR_NO_HARDWARE_CURSORS=1
+fi
+
 export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=btw
+export XDG_SESSION_TYPE=wayland
 export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM="wayland;xcb"
+
+# Sway won't start on NVIDIA's proprietary driver without this flag.
+set --
+[ -d /sys/module/nvidia_drm ] && set -- --unsupported-gpu
+
 mkdir -p "$HOME/.local/state"
-exec sway >"$HOME/.local/state/sway.log" 2>&1
+exec sway "$@" --config /usr/share/btw/config/sway/config >"$HOME/.local/state/sway.log" 2>&1

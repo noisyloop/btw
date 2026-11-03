@@ -1,4 +1,5 @@
-// btw desktop bar (style: /etc/xdg/waybar/style.css, from distro/themes/fractal)
+// btw desktop bar (style: distro/themes/fractal/waybar.css). btw-bar runs waybar
+// with both from /usr/share/btw/config.
 {
   "layer": "top",
   "position": "top",
@@ -9,7 +10,7 @@
   "custom/btw": {
     "format": "▲ btw",
     "tooltip": false,
-    "on-click": "fuzzel"
+    "on-click": "btw-menu"
   },
   "sway/workspaces": {
     "persistent-workspaces": { "1": [], "2": [], "3": [], "4": [], "5": [] }
