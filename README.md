@@ -61,8 +61,12 @@ step at a time.
 
 ## Try btw on your Linux
 
-btw isn't only for Macs. On an Arch-based system (Arch, Omarchy, EndeavourOS, CachyOS, …),
-on a PC or in a VM, x86-64 or arm64, install it next to the desktop you already have:
+btw isn't only for Macs. It installs on an existing Arch-based system (Arch, Omarchy,
+EndeavourOS, CachyOS, Garuda, …), on a PC or in a VM, x86-64 or arm64. It goes next to
+the desktop you already have, as its own **btw** session: nothing about your current
+desktop changes, and you choose between them when you log in.
+
+### Install
 
 ```sh
 git clone https://github.com/noisyloop/btw.git
@@ -70,20 +74,99 @@ cd btw
 ./install.sh
 ```
 
-It installs the packages with pacman (Sway, waybar, foot, fuzzel, mako, Quickshell, the
-fonts) and puts btw's scripts in `/usr/local/bin` and everything else in `/usr/share/btw`.
-Then log out and pick **btw** on the login screen, or log in on a text console
-(<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F3</kbd>) and run `btw-session`.
+Run it as your normal user; it asks for your password when it needs sudo. It:
 
-btw is a separate session with its own configs, passed straight to each program, so it
-never reads or changes your `~/.config`. On Omarchy, Hyprland and its setup stay exactly
-as they were, and you choose between them when you log in. Super+B and Super+E open your
-default browser and file manager. On a real GPU Sway renders with it; without one (the Mac
-VM) it falls back to the CPU, and on NVIDIA's driver it starts with `--unsupported-gpu`.
-`./install.sh --uninstall` removes btw's files again (`--no-packages` skips pacman).
+- installs the packages with pacman: Sway, swaybg, waybar, foot, fuzzel, mako, libnotify,
+  Quickshell, polkit, xdg-utils and the IBM Plex and DejaVu fonts. Ones you already have
+  are skipped, and any your repos don't carry are skipped with a warning.
+- puts btw's scripts in `/usr/local/bin` (`btw-session`, `btw-bar`, `btw-menu`, …) and
+  everything else in `/usr/share/btw`, and adds a **btw** entry to the login screen.
 
-GNOME isn't a good fit: GNOME Shell draws its own bar and menus and doesn't let other
-programs add panels, so the btw shell can't run there.
+btw keeps its own configs in `/usr/share/btw/config` and hands them straight to each
+program, so it never reads or changes your `~/.config`. If you already use waybar, mako or
+Sway with your own settings, those stay as they are.
+
+If pacman says it can't find a package version, your package lists are out of date: run
+`sudo pacman -Syu` (or Omarchy's own update) first, then `./install.sh` again.
+
+### Start btw
+
+- **From the login screen:** log out, open the session menu (usually a button or gear icon
+  near the password box), choose **btw** and log in.
+- **From a text console:** press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F3</kbd>, log in, and run
+  `btw-session`. Return to your normal desktop with <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F1</kbd>
+  (or <kbd>F2</kbd>).
+
+**On Omarchy:** Hyprland and Omarchy's setup are untouched. If Omarchy logs you straight in
+without a login screen, use the text console way. If you do get a login screen, pick
+**btw** there; choosing Hyprland again takes you back to Omarchy.
+
+### Use it
+
+| Keys | Action |
+|---|---|
+| <kbd>Super</kbd>+<kbd>Space</kbd> | App menu |
+| <kbd>Super</kbd>+<kbd>Enter</kbd> | Terminal (foot) |
+| <kbd>Super</kbd>+<kbd>B</kbd> / <kbd>Super</kbd>+<kbd>E</kbd> | Your default browser / file manager |
+| <kbd>Super</kbd>+<kbd>W</kbd> | Close window |
+| <kbd>Super</kbd>+<kbd>1</kbd>…<kbd>5</kbd> | Switch workspace |
+| <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch between waybar and the btw shell |
+| <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> | Leave btw |
+
+btw starts with waybar, fuzzel and mako. <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> switches
+to the btw shell (its own bar, app menu and notifications) and btw remembers the choice.
+Log out, Restart and Shut down are in the app menu under **Power**.
+
+Sway uses your GPU when you have one. In a VM without 3D it falls back to drawing on the
+CPU, and on NVIDIA's proprietary driver it starts with `--unsupported-gpu`.
+
+### Update
+
+```sh
+cd btw
+git pull
+./install.sh --no-packages
+```
+
+`--no-packages` copies the new btw files without touching pacman. Leave it off if an update
+adds packages.
+
+### Remove
+
+```sh
+cd btw
+./install.sh --uninstall
+```
+
+This deletes every file btw installed (the scripts, `/usr/share/btw`, the wallpaper and the
+login-screen entry) and leaves your packages alone. To clear btw's remembered settings and
+logs too:
+
+```sh
+rm -rf ~/.config/btw ~/.local/state/btw-bar.log ~/.local/state/sway.log
+```
+
+The packages may be used by other things, so remove only the ones you don't need. On
+Omarchy, keep **waybar**, **mako**, **swaybg**, **libnotify** and **polkit**: Omarchy uses
+them. The ones btw added that Omarchy doesn't need:
+
+```sh
+sudo pacman -Rns sway foot fuzzel quickshell
+```
+
+On another distro, check first with `pacman -Qi <package>` ("Required By") before removing.
+
+### If something goes wrong
+
+- **Black screen or Sway won't start:** look at `~/.local/state/sway.log`. From a text
+  console, `WLR_RENDERER=pixman btw-session` forces CPU drawing, which works on any GPU.
+- **No bar, menu or notifications:** look at `~/.local/state/btw-bar.log`, and press
+  <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> to switch back to waybar.
+- **btw isn't on the login screen:** some login screens only reread their session list
+  after a restart. The text console way always works.
+
+GNOME isn't a good fit for btw: GNOME Shell draws its own bar and menus and doesn't let
+other programs add panels, so the btw shell can't run there.
 
 ## Requirements
 
