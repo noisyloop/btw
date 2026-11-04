@@ -1,0 +1,80 @@
+#!/bin/sh
+# One command for btw: its own tools, and every installed app by name.
+#
+#   btw                      this help, with btw's tools
+#   btw fractals             a btw tool (any btw-<name> command, with its arguments)
+#   btw firefox              an installed app, by name or desktop id
+#   btw apps                 list the installed apps
+#   btw start                open btw (in a window inside another desktop)
+#
+# Apps are matched by desktop id, then name, then the start of a name, all
+# ignoring case; if several match, btw lists them instead of guessing.
+set -u
+
+tools() {
+    cat <<'EOF'
+  fractals                 pick and tune the wallpaper
+  wallpaper set <name>     switch fractal (mandelbulb, mandelbox, sierpinski, menger)
+  wallpaper still|live     the still picture, or the live fractal
+  bar toggle               switch between the btw shell and waybar
+  menu                     open the app menu
+  open browser|files       your default browser or file manager
+  update [branch]          update btw from GitHub
+  start                    open btw
+  apps                     list the installed apps
+EOF
+}
+
+help() {
+    echo "usage: btw <tool or app> [arguments]"
+    echo
+    echo "btw's tools:"
+    tools
+    echo
+    echo "Anything else opens an installed app: btw firefox, btw soundgineer, ..."
+}
+
+# Installed apps from btw-apps: "id<TAB>name<TAB>description".
+apps() {
+    btw-apps | cut -f1-3
+}
+
+open_app() {
+    query=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+    list=$(apps)
+    for field in 1 2; do
+        hit=$(printf '%s\n' "$list" | awk -F '\t' -v q="$query" -v f=$field 'tolower($f) == q { print $1; exit }')
+        [ -n "$hit" ] && exec btw-launch "$hit"
+    done
+    hits=$(printf '%s\n' "$list" | awk -F '\t' -v q="$query" 'index(tolower($2), q) == 1')
+    case $(printf '%s' "$hits" | grep -c .) in
+    1) exec btw-launch "$(printf '%s' "$hits" | cut -f1)" ;;
+    0)
+        echo "btw: no tool or app called '$1' (btw apps lists the apps)" >&2
+        exit 1
+        ;;
+    *)
+        echo "btw: '$1' could be any of these:" >&2
+        printf '%s\n' "$hits" | awk -F '\t' '{ printf "  %-24s %s\n", $2, $3 }' >&2
+        exit 1
+        ;;
+    esac
+}
+
+[ $# -eq 0 ] && { help; exit 0; }
+name=$1
+shift
+case $name in
+-h | --help | help) help ;;
+apps) apps | sort -t "$(printf '\t')" -k2 -f | awk -F '\t' '{ printf "  %-28s %s\n", $2, $3 }' ;;
+start) exec btw-session "$@" ;;
+# Internal helpers rather than tools.
+session | launch) echo "btw: try 'btw start' or 'btw <app>'" >&2; exit 2 ;;
+*)
+    # A btw tool, if there's a btw-<name> command; otherwise an app.
+    case $name in *[!a-z0-9-]*) ;; *)
+        command -v "btw-$name" >/dev/null && exec "btw-$name" "$@" ;;
+    esac
+    open_app "$name"
+    ;;
+esac

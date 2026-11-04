@@ -21,7 +21,7 @@ put() { # put <mode> <source> <destination below root>
   manifest+=("$3")
 }
 
-for bin in btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update btw-wallpaper btw-fractals; do
+for bin in btw btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update btw-wallpaper btw-fractals; do
   put 755 "$src/rootfs/usr/local/bin/$bin" "/usr/local/bin/$bin"
 done
 
