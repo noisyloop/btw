@@ -38,13 +38,18 @@ put 644 "$src/rootfs/etc/xdg/fastfetch/logo.txt" "$conf/fastfetch/logo.txt"
 for f in "$src"/shell/*.qml; do
   put 644 "$f" "/usr/share/btw/shell/$(basename "$f")"
 done
-for f in "$src"/wallpaper/*.qml "$src"/wallpaper/*.frag.qsb; do
+for f in "$src"/wallpaper/{shell,Settings,Theme,fractals}.qml "$src"/wallpaper/*.frag.qsb; do
   put 644 "$f" "/usr/share/btw/wallpaper/$(basename "$f")"
 done
 for f in "$src"/themes/fractal/*; do
-  put 644 "$f" "/usr/share/btw/themes/fractal/$(basename "$f")"
+  [[ -f $f ]] && put 644 "$f" "/usr/share/btw/themes/fractal/$(basename "$f")"
 done
-put 644 "$src/themes/fractal/wallpaper.png" /usr/share/backgrounds/btw/fractal.png
+# A still of each fractal, for when the wallpaper can't be live (no GPU), and
+# fractal.png, the default, for anything that wants one picture.
+for f in "$src"/themes/fractal/stills/*.png; do
+  put 644 "$f" "/usr/share/backgrounds/btw/$(basename "$f")"
+done
+put 644 "$src/themes/fractal/stills/mandelbulb.png" /usr/share/backgrounds/btw/fractal.png
 put 644 "$src/btw.desktop" /usr/share/wayland-sessions/btw.desktop
 # An app-menu entry that opens btw in a window inside another desktop, and the
 # icon for it.

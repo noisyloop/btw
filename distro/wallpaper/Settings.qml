@@ -31,6 +31,12 @@ Scope {
         return Qt.resolvedUrl(id + ".frag.qsb");
     }
 
+    // The still picture of a fractal, shown when the wallpaper can't be live.
+    function still(id) {
+        // BTW_STILLS points at a checkout's pictures while developing.
+        return "file://" + (Quickshell.env("BTW_STILLS") || "/usr/share/backgrounds/btw") + "/" + id + ".png";
+    }
+
     function clamp(v, lo, hi, fallback) {
         const n = Number(v);
         return isNaN(n) ? fallback : Math.min(hi, Math.max(lo, n));

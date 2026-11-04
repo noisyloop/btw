@@ -1,6 +1,7 @@
 // Fractals: btw's wallpaper app. Live previews of each fractal to pick from,
 // sliders for hue, glow and motion, and a switch between the live wallpaper
-// and the still picture. Every change is saved to ~/.config/btw/wallpaper.conf
+// and the still picture. Without a GPU (the Mac VM, VMs without 3D) the
+// previews are the still pictures, and picking one changes the picture. Every change is saved to ~/.config/btw/wallpaper.conf
 // (Settings.qml), which the wallpaper watches, so it changes as you drag.
 //
 // btw-fractals opens it (`quickshell -n -p /usr/share/btw/wallpaper/fractals.qml`).
@@ -55,7 +56,9 @@ ShellRoot {
         onTriggered: root.clock += 0.05 * Math.max(settings.speed, 0.4)
     }
 
-    readonly property bool shaders: GraphicsInfo.api !== GraphicsInfo.Software
+    // Whether Qt draws with a GPU. GraphicsInfo only reports on items in a
+    // window, so ask the page (below) rather than this root object.
+    readonly property bool shaders: page.GraphicsInfo.api !== GraphicsInfo.Software
 
     FloatingWindow {
         id: win
@@ -213,7 +216,7 @@ ShellRoot {
                     Layout.fillWidth: true
                     text: root.shaders
                         ? "Your wallpaper is a live, raymarched 3D fractal. Pick one and tune it; the wallpaper follows as you go."
-                        : "This display has no GPU to draw fractals with, so the wallpaper is the still picture."
+                        : "This display has no GPU to spare, so the wallpaper is a still picture of the fractal you pick."
                     color: Theme.muted
                     font.pixelSize: 13
                 }
@@ -260,12 +263,13 @@ ShellRoot {
                                     layer.smooth: true
                                     layer.textureSize: Qt.size(Math.min(width, 200), Math.min(width, 200) * height / Math.max(1, width))
                                 }
-                                Text {
+                                Image {
                                     visible: !root.shaders
-                                    anchors.centerIn: parent
-                                    text: "▲"
-                                    color: Theme.line
-                                    font.pixelSize: 36
+                                    anchors.fill: parent
+                                    source: root.shaders ? "" : settings.still(card.modelData.id)
+                                    sourceSize.width: 400
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
                                 }
                             }
                             ColumnLayout {
@@ -299,20 +303,26 @@ ShellRoot {
                                 onClicked: {
                                     settings.fractal = card.modelData.id;
                                     settings.save();
-                                    // Picking a fractal means wanting to see it move.
-                                    if (root.shaders)
+                                    // Picking a fractal means wanting to see it move;
+                                    // without a GPU, swap in its still picture.
+                                    if (root.shaders && settings.mode === "still")
                                         root.setMode("live");
+                                    else if (!root.shaders)
+                                        restartSoon.restart();
                                 }
                             }
                         }
                     }
                 }
 
-                // Tuning
+                // Tuning: only the live wallpaper has colors and motion to tune.
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.topMargin: 4
                     spacing: 0
+                    visible: root.shaders
+                    enabled: settings.mode === "live"
+                    opacity: enabled ? 1 : 0.4
                     Dial {
                         label: "Hue"
                         value: settings.hue
@@ -361,6 +371,7 @@ ShellRoot {
                     }
                     Choice {
                         text: "Reset"
+                        visible: root.shaders
                         onPicked: settings.reset()
                     }
                 }
