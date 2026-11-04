@@ -8,7 +8,10 @@ set $term foot --config /usr/share/btw/config/foot/foot.ini
 set $menu btw-menu
 
 font pango:IBM Plex Sans 10
-output * bg /usr/share/backgrounds/btw/fractal.png fill
+# The wallpaper: the live 3D fractal, or the still picture without a GPU
+# (btw-wallpaper decides). The solid color shows only for the moment before.
+output * bg #07080a solid_color
+exec btw-wallpaper start
 input type:keyboard xkb_layout us
 
 default_border pixel 2
@@ -66,6 +69,9 @@ bindsym $mod+Shift+r reload
 bindsym $mod+Shift+b exec btw-bar toggle
 bindsym $mod+Shift+e exec swaymsg exit
 
-exec $term sh -c 'command -v fastfetch >/dev/null && fastfetch; exec "${SHELL:-bash}"'
+# The welcome terminal floats in the middle, just big enough for fastfetch,
+# so the fractal shows around it.
+for_window [app_id="btw-welcome"] floating enable, move position center
+exec $term --app-id=btw-welcome --window-size-chars=54x11 sh -c 'command -v fastfetch >/dev/null && fastfetch -c /usr/share/btw/config/fastfetch/config.jsonc; exec "${SHELL:-bash}"'
 
 include /etc/sway/config.d/*

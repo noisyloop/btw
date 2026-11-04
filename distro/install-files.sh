@@ -21,7 +21,7 @@ put() { # put <mode> <source> <destination below root>
   manifest+=("$3")
 }
 
-for bin in btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update; do
+for bin in btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update btw-wallpaper; do
   put 755 "$src/rootfs/usr/local/bin/$bin" "/usr/local/bin/$bin"
 done
 
@@ -32,9 +32,14 @@ put 644 "$src/themes/fractal/waybar.css" "$conf/waybar/style.css"
 put 644 "$src/rootfs/etc/xdg/mako/config" "$conf/mako/config"
 put 644 "$src/rootfs/etc/xdg/fuzzel/fuzzel.ini" "$conf/fuzzel/fuzzel.ini"
 put 644 "$src/rootfs/etc/xdg/foot/foot.ini" "$conf/foot/foot.ini"
+put 644 "$src/rootfs/etc/xdg/fastfetch/config.jsonc" "$conf/fastfetch/config.jsonc"
+put 644 "$src/rootfs/etc/xdg/fastfetch/logo.txt" "$conf/fastfetch/logo.txt"
 
 for f in "$src"/shell/*.qml; do
   put 644 "$f" "/usr/share/btw/shell/$(basename "$f")"
+done
+for f in "$src"/wallpaper/shell.qml "$src"/wallpaper/*.frag.qsb; do
+  put 644 "$f" "/usr/share/btw/wallpaper/$(basename "$f")"
 done
 for f in "$src"/themes/fractal/*; do
   put 644 "$f" "/usr/share/btw/themes/fractal/$(basename "$f")"

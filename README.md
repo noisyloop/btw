@@ -139,6 +139,11 @@ As a whole desktop (in a window, use <kbd>Alt</kbd> instead of <kbd>Super</kbd>)
 | <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch between waybar and the btw shell |
 | <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> | Leave btw |
 
+The wallpaper is the live 3D fractal from the desktop preview, slowly orbiting (Quickshell
+draws it on the GPU; without one it's the still picture). `btw-wallpaper set mandelbox`
+(or `mandelbulb`, `sierpinski`, `menger`) changes the fractal, and `btw-wallpaper still`
+keeps the picture.
+
 btw starts with waybar, fuzzel and mako. <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> switches
 to the btw shell (its own bar, app menu and notifications) and btw remembers the choice.
 Log out, Restart and Shut down are in the app menu under **Power**.
@@ -357,7 +362,7 @@ desktop/    browser preview of the btw desktop (temporary)
 install.sh  install btw on an existing Arch-based system, as its own login session
 windows/    btw on Windows: install-btw.ps1 (WSL + Arch + btw), btw-wsl launcher, icon
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/,
-            shell/ (the btw shell) and install-files.sh (puts btw in place, for both)
+            shell/ (the btw shell), wallpaper/ (the live fractal) and install-files.sh (puts btw in place, for both)
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
 assets/     the app icon (AppIcon.png, from scripts/make-icon.py)
 scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests

@@ -58,25 +58,38 @@ PanelWindow {
 
         Repeater {
             model: Sway.workspaces
+            // Flat square tabs, like waybar's: the current one lit in mint
+            // with a bar underneath.
             delegate: Rectangle {
+                id: tab
                 required property var modelData
-                Layout.preferredHeight: Theme.barHeight - 8
-                Layout.preferredWidth: Math.max(Theme.barHeight - 4, name.implicitWidth + 16)
-                Layout.leftMargin: 2
-                Layout.rightMargin: 2
-                radius: 6
-                color: modelData.focused ? Theme.accent : modelData.urgent ? Theme.amber : "transparent"
+                readonly property color mark: modelData.focused ? Theme.accent : modelData.urgent ? Theme.amber : "transparent"
+                Layout.fillHeight: true
+                Layout.preferredWidth: Math.max(Theme.barHeight, name.implicitWidth + 20)
+                color: modelData.focused ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12)
+                     : hover.containsMouse ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.08) : "transparent"
 
                 Label {
                     id: name
                     anchors.centerIn: parent
-                    text: modelData.name
-                    color: modelData.focused || modelData.urgent ? Theme.background : Theme.muted
+                    text: tab.modelData.name
+                    font.bold: tab.modelData.focused
+                    color: tab.modelData.focused ? Theme.accent : tab.modelData.urgent ? Theme.amber
+                         : hover.containsMouse ? Theme.foreground : Theme.muted
+                }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: 2
+                    color: tab.mark
                 }
                 MouseArea {
+                    id: hover
                     anchors.fill: parent
+                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Sway.focusWorkspace(modelData.num)
+                    onClicked: Sway.focusWorkspace(tab.modelData.num)
                 }
             }
         }
