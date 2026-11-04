@@ -31,15 +31,20 @@ install -Dm644 "$src/themes/fractal/waybar.css" "$root/etc/xdg/waybar/style.css"
 # btw's apps (apps.txt), built inside the disk's root so they link against
 # exactly the libraries it ships. Each app's recipe is apps/<name>.sh; the
 # build tools are installed only for this and removed afterwards.
-mkdir -p "$root/tmp/btw-apps"
-cp "$src"/apps/*.sh "$root/tmp/btw-apps/"
-grep -Ev '^\s*(#|$)' "$src/apps.txt" >"$root/tmp/btw-apps/list"
+# Not /tmp: arch-chroot mounts an empty tmpfs there.
+mkdir -p "$root/var/tmp/btw-apps"
+cp "$src"/apps/*.sh "$root/var/tmp/btw-apps/"
+grep -Ev '^\s*(#|$)' "$src/apps.txt" >"$root/var/tmp/btw-apps/list"
 arch-chroot "$root" /bin/bash -euxo pipefail <<'CHROOT'
+# Inside the build container pacman can't see the disk's free space, and its
+# download sandbox isn't allowed (the same reasons as in the Dockerfile).
+# CheckSpace stays off in the image, as below; the sandbox comes back after.
+sed -i -e 's/^CheckSpace/#CheckSpace/' -e '/^\[options\]/a DisableSandbox' /etc/pacman.conf
 pacman -S --needed --noconfirm --asdeps base-devel cmake ninja git pkgconf
-cd /tmp/btw-apps
+cd /var/tmp/btw-apps
 while read -r name repo branch cmd; do
   git clone -q --depth 1 --branch "$branch" "$repo" "src-$name" </dev/null
-  bash "./$name.sh" "/tmp/btw-apps/src-$name" </dev/null
+  bash "./$name.sh" "/var/tmp/btw-apps/src-$name" </dev/null
 done <list
 # The build tools were installed as dependencies of nothing; remove them.
 orphans=$(pacman -Qdtq || true)
@@ -50,8 +55,9 @@ fi
 if [[ -f /usr/lib/systemd/user/soundgineer.socket ]]; then
   systemctl --global enable soundgineer.socket
 fi
+sed -i '/^DisableSandbox$/d' /etc/pacman.conf
 CHROOT
-rm -rf "$root/tmp/btw-apps"
+rm -rf "$root/var/tmp/btw-apps"
 
 arch-chroot "$root" /bin/bash -euxo pipefail <<'CHROOT'
 sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf
