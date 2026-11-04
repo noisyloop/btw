@@ -32,8 +32,8 @@ chmod 440 /etc/sudoers.d/wheel
 echo 'LANG=C.UTF-8' >/etc/locale.conf
 
 # Clean up: pacman as shipped, no package cache, and no signing keys (each
-# install makes its own on first launch). WSL writes resolv.conf and hostname.
+# install makes its own on first launch). resolv.conf and hostname are
+# Docker's while the container runs and come out empty; WSL writes its own.
 mv /etc/pacman.conf.orig /etc/pacman.conf
 pacman -Scc --noconfirm >/dev/null
 rm -rf /etc/pacman.d/gnupg
-rm -f /etc/resolv.conf /etc/hostname
