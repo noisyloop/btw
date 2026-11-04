@@ -12,6 +12,11 @@ import Quickshell
 import Quickshell.Io
 
 ShellRoot {
+    // Installed files change only when btw is updated, and the new files land
+    // one at a time; a reload halfway through fails ("File not found").
+    // Changes apply the next time btw starts (as for the wallpaper).
+    settings.watchFiles: false
+
     // One bar on each display.
     Variants {
         model: Quickshell.screens
