@@ -66,9 +66,30 @@ jobs:
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
           scripts/boot-test.py out/btw-factory.img 16
 
+  wsl:
+    name: Windows package (btw.wsl)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build btw.wsl (Arch Linux with btw, for WSL)
+        run: windows/build-wsl.sh out/btw.wsl
+      # Uploaded before the test so a failing package can still be inspected.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btw-wsl
+          path: out/btw.wsl
+          compression-level: 0
+      - name: Open btw from it in a stand-in WSLg display; it comes up and closes cleanly
+        run: |
+          docker import out/btw.wsl btw-wsl-test
+          # Arch's sway carries the cap_sys_nice file capability, which Docker
+          # doesn't grant by default (WSL does); without it sway can't start.
+          docker run --rm --cap-add SYS_NICE -v "$PWD/windows/wsl/test.sh:/test.sh:ro" btw-wsl-test bash /test.sh
+
   release:
     name: Release
-    needs: [macos, image]
+    needs: [macos, image, wsl]
     # Releases come from main only; runs on other branches just build and test.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -90,5 +111,5 @@ jobs:
             echo "v$VERSION is already released; nothing to publish."
             exit 0
           fi
-          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz \
+          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz dist/btw.wsl \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "btw $VERSION" --generate-notes --latest
