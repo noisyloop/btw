@@ -11,6 +11,9 @@ import Quickshell.Io
 
 ShellRoot {
     id: root
+    // Installed files change only when btw is updated, and the new files land
+    // one at a time; a reload halfway through would fail. Restart instead.
+    settings.watchFiles: false
 
     Settings {
         id: settings
