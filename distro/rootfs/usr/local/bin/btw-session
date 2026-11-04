@@ -58,6 +58,9 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
 exec sh -c 'sleep 5; while swaymsg -t get_outputs | grep -q "\"name\""; do sleep 2; done; swaymsg exit'
 EOF2
     config=$window
+    # The desktop around the window keeps showing notifications: btw's shell
+    # and mako leave the notification service to it (btw-bar, Notifications.qml).
+    export BTW_IN_WINDOW=1
 fi
 
 # Without a real GPU (the Mac VM's virtio-gpu, or no render node at all),

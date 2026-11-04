@@ -61,6 +61,8 @@ waybar_and_mako() {
     # If another desktop's notification service is running (e.g. Omarchy's
     # mako, when btw runs alongside it), this mako exits and notifications
     # keep showing there.
+    # In a window, not at all: the desktop around it shows notifications.
+    [ -n "${BTW_IN_WINDOW:-}" ] && return
     setsid mako --config "$btwconf/mako/config" >>"$log" 2>&1 </dev/null &
     echo "mako $!" >>"$pids"
 }
