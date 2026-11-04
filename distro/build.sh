@@ -35,6 +35,10 @@ mkdir -p "$root/tmp/btw-apps"
 cp "$src"/apps/*.sh "$root/tmp/btw-apps/"
 grep -Ev '^\s*(#|$)' "$src/apps.txt" >"$root/tmp/btw-apps/list"
 arch-chroot "$root" /bin/bash -euxo pipefail <<'CHROOT'
+# Inside the build container pacman can't see the disk's free space, and its
+# download sandbox isn't allowed (the same reasons as in the Dockerfile).
+# CheckSpace stays off in the image, as below; the sandbox comes back after.
+sed -i -e 's/^CheckSpace/#CheckSpace/' -e '/^\[options\]/a DisableSandbox' /etc/pacman.conf
 pacman -S --needed --noconfirm --asdeps base-devel cmake ninja git pkgconf
 cd /tmp/btw-apps
 while read -r name repo branch cmd; do
@@ -50,6 +54,7 @@ fi
 if [[ -f /usr/lib/systemd/user/soundgineer.socket ]]; then
   systemctl --global enable soundgineer.socket
 fi
+sed -i '/^DisableSandbox$/d' /etc/pacman.conf
 CHROOT
 rm -rf "$root/tmp/btw-apps"
 
