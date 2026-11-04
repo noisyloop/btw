@@ -145,6 +145,23 @@ previews and tune its hue, glow and motion; the wallpaper changes as you drag. F
 `btw-wallpaper set mandelbox` (or `mandelbulb`, `sierpinski`, `menger`) and `btw-wallpaper still`
 or `live` do the same. The settings are in `~/.config/btw/wallpaper.conf`.
 
+From a terminal, `btw` runs btw's tools and opens apps by name: `btw fractals`, `btw firefox`,
+`btw wallpaper set menger`, `btw update`. `btw` on its own lists the tools, and `btw apps`
+lists the installed apps.
+
+### Apps that come with btw
+
+btw installs a few apps of its own, listed in `distro/apps.txt`. Each comes from its own
+repository and installs for your user, into `~/.local`, with its own installer:
+
+- **Soundgineer**, a wavetable synthesizer ([noisyloop/omarchy-audio-synthesizer](https://github.com/noisyloop/omarchy-audio-synthesizer)).
+  Open it from the app menu or with `btw soundgineer`.
+
+`./install.sh` and `btw update` fetch and build them, and add the build tools they need
+(base-devel, cmake, ninja, pipewire-jack, qt6-declarative). If one fails to build, btw installs
+anyway and says where the log is. `./install.sh --no-apps` leaves them out, and an app you
+already installed another way is left as it is.
+
 btw starts with the btw shell: its own bar, app menu and notifications.
 <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> switches to waybar, fuzzel and mako and back, and
 btw remembers the choice. If the shell can't start, btw uses waybar and says so.

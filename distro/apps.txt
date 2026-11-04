@@ -1,0 +1,7 @@
+# Apps that come with btw. install.sh (and so btw update) fetches each one
+# into ~/.local/share/btw/apps/<name> and runs its own ./install.sh as you.
+# An app that's already installed another way (its command is already there)
+# is left alone. ./install.sh --no-apps skips them all.
+#
+# name         git repository                                            branch  command
+soundgineer    https://github.com/noisyloop/omarchy-audio-synthesizer.git main    soundgineer

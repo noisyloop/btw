@@ -1,8 +1,11 @@
 #!/bin/sh
 # Opens the Fractals app, which picks and tunes the wallpaper. If it's already
-# open, brings it to the front instead.
+# open in this btw session, brings it to the front instead.
+#
+# Only this session counts: another btw (an older window, say) may have its
+# own Fractals, which can't be shown here.
 app=/usr/share/btw/wallpaper/fractals.qml
-if pgrep -f "quickshell -n -p $app" >/dev/null; then
+if swaymsg -t get_tree 2>/dev/null | grep -q '"name": "Fractals"'; then
     exec swaymsg -q '[title="^Fractals$"] focus'
 fi
-QT_QPA_PLATFORM=wayland exec setsid quickshell -n -p "$app" </dev/null >/dev/null 2>&1
+QT_QPA_PLATFORM=wayland exec setsid quickshell -p "$app" </dev/null >/dev/null 2>&1
