@@ -21,7 +21,7 @@ put() { # put <mode> <source> <destination below root>
   manifest+=("$3")
 }
 
-for bin in btw btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update btw-wallpaper btw-fractals; do
+for bin in btw btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-update btw-wallpaper btw-fractals btw-welcome btw-music; do
   put 755 "$src/rootfs/usr/local/bin/$bin" "/usr/local/bin/$bin"
 done
 
@@ -55,6 +55,11 @@ put 644 "$src/btw.desktop" /usr/share/wayland-sessions/btw.desktop
 # icon for it.
 put 644 "$src/btw-app.desktop" /usr/share/applications/btw.desktop
 put 644 "$src/btw-fractals.desktop" /usr/share/applications/btw-fractals.desktop
+# Music, btw's music player.
+for f in "$src"/music/*.qml; do
+  put 644 "$f" "/usr/share/btw/music/$(basename "$f")"
+done
+put 644 "$src/btw-music.desktop" /usr/share/applications/btw-music.desktop
 put 644 "$src/../assets/AppIcon.svg" /usr/share/icons/hicolor/scalable/apps/btw.svg
 put 644 "$src/../assets/AppIcon.png" /usr/share/pixmaps/btw.png
 

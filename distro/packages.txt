@@ -2,9 +2,16 @@
 base
 archlinuxarm-keyring
 linux-aarch64
+# The virtio sound driver, which linux-aarch64 doesn't build (dkms/virtio-snd):
+# DKMS builds it at image build time and again after every kernel update.
+linux-aarch64-headers
+dkms
 mkinitcpio
 sudo
+# ssh and scp; sshd is off (see build.sh and rootfs/etc/ssh/sshd_config.d).
 openssh
+# The firewall: rootfs/etc/nftables.conf.
+nftables
 less
 vim
 
@@ -27,6 +34,9 @@ wireplumber
 pipewire-pulse
 pipewire-jack
 qt6-declarative
+# Music (distro/music) plays through Qt Multimedia's FFmpeg backend.
+qt6-multimedia
+qt6-multimedia-ffmpeg
 firefox
 thunar
 mousepad

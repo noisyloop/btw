@@ -25,6 +25,7 @@ SRC="${XDG_DATA_HOME:-$HOME/.local/share}/btw/src"
 PACKAGES=(
   sway swaybg waybar foot fuzzel mako libnotify
   quickshell polkit xdg-utils
+  qt6-multimedia qt6-multimedia-ffmpeg
   ttf-ibm-plex ttf-dejavu
 )
 # What btw's apps (distro/apps.txt) need to build: Soundgineer is C++ with a
