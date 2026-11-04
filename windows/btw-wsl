@@ -2,6 +2,9 @@
 # Opens btw in a window on Windows, through WSLg. The btw shortcut in the
 # Start menu runs this (install-btw.ps1 puts it in /usr/local/bin).
 #
+#   btw-wsl           open btw
+#   btw-wsl --check   only check that it can (the installer runs this)
+#
 # It sets up what WSLg needs, then runs btw-session as it is:
 #   - WSLg keeps its display socket in /mnt/wslg/runtime-dir. With systemd on,
 #     the login's runtime dir is /run/user/<uid> instead, so the socket (and
@@ -10,6 +13,8 @@
 #     started from Windows is running, which would close btw. (BTW_STARTED
 #     tells btw-session it's already been handed off, so it runs here.)
 set -u
+check=
+[ "${1:-}" = --check ] && check=yes
 wslg=/mnt/wslg/runtime-dir
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
 
@@ -29,14 +34,31 @@ if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "$rt/bus" ]; then
     export DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus"
 fi
 
+problems=0
+problem() {
+    echo "btw-wsl: $*" >&2
+    problems=$((problems + 1))
+}
 if [ ! -S "$rt/$WAYLAND_DISPLAY" ]; then
-    echo "btw-wsl: no WSLg display ($rt/$WAYLAND_DISPLAY)." >&2
-    echo "Check that WSL is up to date (wsl --update in PowerShell) and that GUI apps work." >&2
-    exit 1
+    problem "WSLg isn't running (no display at $rt/$WAYLAND_DISPLAY)." \
+        "In PowerShell, run: wsl --update  then: wsl --shutdown  and try again."
 fi
-if ! command -v btw-session >/dev/null; then
-    echo "btw-wsl: btw isn't installed in this Linux; run install-btw.ps1 again." >&2
-    exit 1
+for cmd in btw-session sway; do
+    command -v "$cmd" >/dev/null || problem "$cmd is missing; run the btw installer again."
+done
+[ $problems -eq 0 ] || exit 1
+if [ -n "$check" ]; then
+    echo "btw-wsl: WSLg's display is there and btw is installed; btw can open."
+    exit 0
 fi
 
-BTW_STARTED=1 exec btw-session
+BTW_STARTED=1 btw-session
+status=$?
+# 0 is a normal close. Otherwise say why, for the message box that
+# open-btw.ps1 shows on Windows: Sway's own errors from its log.
+if [ $status -ne 0 ]; then
+    echo "btw closed with an error (status $status)." >&2
+    grep -v -e swaybg -e waybar -e mako -e quickshell -e foot "$HOME/.local/state/sway.log" 2>/dev/null |
+        grep -iE 'error|fail|unable|cannot|could not|abort' | tail -n 4 >&2
+fi
+exit $status

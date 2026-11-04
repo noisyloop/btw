@@ -242,7 +242,9 @@ PowerShell:
 irm https://raw.githubusercontent.com/noisyloop/btw/main/windows/install-btw.ps1 | iex
 ```
 
-Then open **btw** from the Start menu. See [windows/README.md](windows/README.md) for what it
+It asks no questions: it installs or updates WSL if needed (Windows asks for an
+administrator's OK), sets up Arch Linux and btw, and opens btw when it's done. After that,
+open **btw** from the Start menu. See [windows/README.md](windows/README.md) for what it
 does, the keys, updating and removing.
 
 ## Requirements
@@ -382,7 +384,7 @@ binaries can run in the arm64 guest.
 desktop/    browser preview of the btw desktop (temporary)
 .github/    CI, run by hand: build, test and release (dmg + disk image)
 install.sh  install btw on an existing Arch-based system, as its own login session
-windows/    btw on Windows: install-btw.ps1 (WSL + Arch + btw), btw-wsl launcher, icon
+windows/    btw on Windows: install-btw.ps1 (WSL + Arch + btw), open-btw.ps1 and btw-wsl (launchers), icon
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/,
             shell/ (the btw shell), wallpaper/ (the live fractal) and install-files.sh (puts btw in place, for both)
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
