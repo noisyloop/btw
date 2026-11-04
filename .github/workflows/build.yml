@@ -83,7 +83,9 @@ jobs:
       - name: Open btw from it in a stand-in WSLg display; it comes up and closes cleanly
         run: |
           docker import out/btw.wsl btw-wsl-test
-          docker run --rm -v "$PWD/windows/wsl/test.sh:/test.sh:ro" btw-wsl-test bash /test.sh
+          # Arch's sway carries the cap_sys_nice file capability, which Docker
+          # doesn't grant by default (WSL does); without it sway can't start.
+          docker run --rm --cap-add SYS_NICE -v "$PWD/windows/wsl/test.sh:/test.sh:ro" btw-wsl-test bash /test.sh
 
   release:
     name: Release
