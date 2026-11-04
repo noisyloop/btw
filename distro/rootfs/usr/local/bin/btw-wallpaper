@@ -1,7 +1,7 @@
 #!/bin/sh
 # Draws btw's wallpaper: the live, slowly orbiting 3D fractal (Quickshell and
-# a GPU), or the still fractal picture (swaybg) when there's no GPU to spare,
-# as in the Mac VM. Its settings are in ~/.config/btw/wallpaper.conf, shared
+# a GPU), or a still picture of the same fractal (swaybg) when there's no GPU
+# to spare, as in the Mac VM. Its settings are in ~/.config/btw/wallpaper.conf, shared
 # with the Fractals app (btw-fractals), which changes them live.
 #
 #   btw-wallpaper start         start it (Sway runs this at login)
@@ -14,7 +14,7 @@ set -u
 
 conf="${XDG_CONFIG_HOME:-$HOME/.config}/btw/wallpaper.conf"
 shell=/usr/share/btw/wallpaper
-picture=/usr/share/backgrounds/btw/fractal.png
+stills=/usr/share/backgrounds/btw
 log="$HOME/.local/state/btw-wallpaper.log"
 pids="${XDG_RUNTIME_DIR:-/tmp}/btw-wallpaper.$(basename "${SWAYSOCK:-default}").pids"
 fractals="mandelbulb mandelbox sierpinski menger"
@@ -46,7 +46,7 @@ ours() {
     [ -f "$pids" ] || return 0
     while read -r pid; do
         case "$(tr '\0' ' ' 2>/dev/null <"/proc/$pid/cmdline")" in
-        *"quickshell -p $shell"* | *"swaybg"*"$picture"*) echo "$pid" ;;
+        *"quickshell -p $shell"* | *"swaybg"*"$stills/"*) echo "$pid" ;;
         esac
     done <"$pids"
 }
@@ -58,8 +58,19 @@ stop() {
 }
 
 still() {
+    picture="$stills/$(fractal).png"
+    [ -f "$picture" ] || picture="$stills/fractal.png"
     setsid swaybg -o '*' -i "$picture" -m fill >>"$log" 2>&1 </dev/null &
     echo $! >>"$pids"
+}
+
+# Whether this session's wallpaper is the live one (it then follows
+# wallpaper.conf by itself; a still picture has to be swapped).
+showing_live() {
+    for pid in $(ours); do
+        case "$(tr '\0' ' ' 2>/dev/null <"/proc/$pid/cmdline")" in *quickshell*) return 0 ;; esac
+    done
+    return 1
 }
 
 start() {
@@ -91,9 +102,10 @@ set)
     *" ${2:-} "*) ;;
     *) echo "usage: btw-wallpaper set <$(echo $fractals | tr ' ' '|')>" >&2; exit 2 ;;
     esac
-    # The live wallpaper watches the file and changes on its own.
+    # The live wallpaper watches the file and changes on its own; a still
+    # picture is swapped for the new fractal's.
     put fractal "$2"
-    [ -z "$(ours)" ] && start
+    showing_live || start
     ;;
 still | live)
     put mode "$1" && start

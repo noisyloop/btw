@@ -21,6 +21,12 @@ quickshell
 libnotify
 # Lets the logged-in user restart and shut down from the app menu.
 polkit
+# Sound, and what Soundgineer (built from distro/apps.txt) runs on.
+pipewire
+wireplumber
+pipewire-pulse
+pipewire-jack
+qt6-declarative
 firefox
 thunar
 mousepad

@@ -139,8 +139,9 @@ As a whole desktop (in a window, use <kbd>Alt</kbd> instead of <kbd>Super</kbd>)
 | <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch between the btw shell and waybar |
 | <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> | Leave btw |
 
-The wallpaper is a live 3D fractal, slowly orbiting (Quickshell draws it on the GPU; without
-one it's the still picture). Open **Fractals** from the app menu to pick the fractal from live
+The wallpaper is a live 3D fractal, slowly orbiting (Quickshell draws it on the GPU). Without
+a GPU to spare, as in the Mac VM, it's a still picture of the same fractal, rendered from the
+same shader (`distro/wallpaper/render-stills.sh` makes them). Open **Fractals** from the app menu to pick the fractal from live
 previews and tune its hue, glow and motion; the wallpaper changes as you drag. From a terminal,
 `btw-wallpaper set mandelbox` (or `mandelbulb`, `sierpinski`, `menger`) and `btw-wallpaper still`
 or `live` do the same. The settings are in `~/.config/btw/wallpaper.conf`.
@@ -156,6 +157,8 @@ repository and installs for your user, into `~/.local`, with its own installer:
 
 - **Soundgineer**, a wavetable synthesizer ([noisyloop/omarchy-audio-synthesizer](https://github.com/noisyloop/omarchy-audio-synthesizer)).
   Open it from the app menu or with `btw soundgineer`.
+
+The Mac VM's disk image builds the same apps in, system-wide, from `distro/apps/<name>.sh`.
 
 `./install.sh` and `btw update` fetch and build them, and add the build tools they need
 (base-devel, cmake, ninja, pipewire-jack, qt6-declarative). If one fails to build, btw installs
