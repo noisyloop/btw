@@ -1,30 +1,42 @@
 #!/bin/sh
 # Draws btw's wallpaper: the live, slowly orbiting 3D fractal (Quickshell and
 # a GPU), or the still fractal picture (swaybg) when there's no GPU to spare,
-# as in the Mac VM. The fractal is kept in ~/.config/btw/fractal.
+# as in the Mac VM. Its settings are in ~/.config/btw/wallpaper.conf, shared
+# with the Fractals app (btw-fractals), which changes them live.
 #
 #   btw-wallpaper start         start it (Sway runs this at login)
-#   btw-wallpaper set <name>    switch fractal: mandelbox, mandelbulb, sierpinski, menger
-#   btw-wallpaper still|live    always use the picture, or the live one again
+#   btw-wallpaper set <name>    switch fractal: mandelbulb, mandelbox, sierpinski, menger
+#   btw-wallpaper still|live    use the picture, or the live fractal again
 #   btw-wallpaper list          print the fractals, the current one marked
 #
 # Like btw-bar, it stops only what it started in this btw session.
 set -u
 
-dir="${XDG_CONFIG_HOME:-$HOME/.config}/btw"
+conf="${XDG_CONFIG_HOME:-$HOME/.config}/btw/wallpaper.conf"
 shell=/usr/share/btw/wallpaper
 picture=/usr/share/backgrounds/btw/fractal.png
 log="$HOME/.local/state/btw-wallpaper.log"
 pids="${XDG_RUNTIME_DIR:-/tmp}/btw-wallpaper.$(basename "${SWAYSOCK:-default}").pids"
-fractals="mandelbox mandelbulb sierpinski menger"
+fractals="mandelbulb mandelbox sierpinski menger"
+
+get() { # get <key> <default>
+    v=$(sed -n "s/^$1=//p" "$conf" 2>/dev/null | tail -n 1)
+    echo "${v:-$2}"
+}
+
+put() { # put <key> <value>
+    mkdir -p "$(dirname "$conf")"
+    tmp="$conf.$$"
+    { grep -v "^$1=" "$conf" 2>/dev/null; echo "$1=$2"; } >"$tmp" && mv "$tmp" "$conf"
+}
 
 fractal() {
-    f=$(cat "$dir/fractal" 2>/dev/null)
+    f=$(get fractal mandelbulb)
     case " $fractals " in *" $f "*) echo "$f" ;; *) echo mandelbulb ;; esac
 }
 
 live() {
-    [ "$(cat "$dir/wallpaper" 2>/dev/null)" = still ] && return 1
+    [ "$(get mode live)" = still ] && return 1
     # Without a GPU, Sway draws with pixman and Qt can't run shaders.
     [ "${WLR_RENDERER:-}" = pixman ] && return 1
     command -v quickshell >/dev/null && [ -f "$shell/shell.qml" ]
@@ -33,7 +45,7 @@ live() {
 ours() {
     [ -f "$pids" ] || return 0
     while read -r pid; do
-        case "$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null)" in
+        case "$(tr '\0' ' ' 2>/dev/null <"/proc/$pid/cmdline")" in
         *"quickshell -p $shell"* | *"swaybg"*"$picture"*) echo "$pid" ;;
         esac
     done <"$pids"
@@ -54,9 +66,9 @@ start() {
     mkdir -p "$(dirname "$log")" "$(dirname "$pids")"
     : >"$log"
     old=$(ours)
+    new=
     if live; then
-        BTW_FRACTAL=$(fractal) QT_QPA_PLATFORM=wayland \
-            setsid quickshell -p "$shell" >>"$log" 2>&1 </dev/null &
+        QT_QPA_PLATFORM=wayland setsid quickshell -p "$shell" >>"$log" 2>&1 </dev/null &
         new=$!
         # If it can't draw (no shader support), fall back to the picture.
         sleep 1.5
@@ -68,7 +80,7 @@ start() {
     # Swap without a gap: the new wallpaper is up before the old one goes.
     [ -n "$old" ] && kill $old 2>/dev/null
     rm -f "$pids"
-    if [ -n "${new:-}" ]; then echo "$new" >"$pids"; else still; fi
+    if [ -n "$new" ]; then echo "$new" >"$pids"; else still; fi
 }
 
 case "${1:-start}" in
@@ -79,10 +91,12 @@ set)
     *" ${2:-} "*) ;;
     *) echo "usage: btw-wallpaper set <$(echo $fractals | tr ' ' '|')>" >&2; exit 2 ;;
     esac
-    mkdir -p "$dir" && echo "$2" >"$dir/fractal" && start
+    # The live wallpaper watches the file and changes on its own.
+    put fractal "$2"
+    [ -z "$(ours)" ] && start
     ;;
 still | live)
-    mkdir -p "$dir" && echo "$1" >"$dir/wallpaper" && start
+    put mode "$1" && start
     ;;
 list)
     cur=$(fractal)

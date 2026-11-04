@@ -136,16 +136,18 @@ As a whole desktop (in a window, use <kbd>Alt</kbd> instead of <kbd>Super</kbd>)
 | <kbd>Super</kbd>+<kbd>B</kbd> / <kbd>Super</kbd>+<kbd>E</kbd> | Your default browser / file manager |
 | <kbd>Super</kbd>+<kbd>W</kbd> | Close window |
 | <kbd>Super</kbd>+<kbd>1</kbd>…<kbd>5</kbd> | Switch workspace |
-| <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch between waybar and the btw shell |
+| <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Switch between the btw shell and waybar |
 | <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> | Leave btw |
 
-The wallpaper is the live 3D fractal from the desktop preview, slowly orbiting (Quickshell
-draws it on the GPU; without one it's the still picture). `btw-wallpaper set mandelbox`
-(or `mandelbulb`, `sierpinski`, `menger`) changes the fractal, and `btw-wallpaper still`
-keeps the picture.
+The wallpaper is a live 3D fractal, slowly orbiting (Quickshell draws it on the GPU; without
+one it's the still picture). Open **Fractals** from the app menu to pick the fractal from live
+previews and tune its hue, glow and motion; the wallpaper changes as you drag. From a terminal,
+`btw-wallpaper set mandelbox` (or `mandelbulb`, `sierpinski`, `menger`) and `btw-wallpaper still`
+or `live` do the same. The settings are in `~/.config/btw/wallpaper.conf`.
 
-btw starts with waybar, fuzzel and mako. <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> switches
-to the btw shell (its own bar, app menu and notifications) and btw remembers the choice.
+btw starts with the btw shell: its own bar, app menu and notifications.
+<kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> switches to waybar, fuzzel and mako and back, and
+btw remembers the choice. If the shell can't start, btw uses waybar and says so.
 Log out, Restart and Shut down are in the app menu under **Power**.
 
 Sway uses your GPU when you have one. In a VM without 3D it falls back to drawing on the
@@ -297,8 +299,8 @@ btw's own desktop UI is being built in QML with [Quickshell](https://quickshell.
 The shell only talks to Sway through `Sway.qml`, so it can follow btw to niri once the VM
 has GPU acceleration.
 
-Waybar, fuzzel and mako are still the default. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>
-(or `btw-bar toggle`) switches to the btw shell and back, and remembers the choice in
+The shell is the default; waybar, fuzzel and mako stay as a fallback for now.
+<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (or `btw-bar toggle`) switches to them and back, and remembers the choice in
 `~/.config/btw/bar`. <kbd>Cmd</kbd>+<kbd>Space</kbd> opens whichever menu goes with it, and
 mako runs only alongside waybar, since one program at a time can show notifications. The VM
 has no GPU, so the shell draws with Qt Quick's software renderer. Quickshell comes from

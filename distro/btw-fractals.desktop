@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Fractals
+GenericName=Wallpaper
+Comment=Choose and tune btw's live fractal wallpaper
+Exec=/usr/local/bin/btw-fractals
+Icon=btw
+Categories=Graphics;Settings;
+Keywords=wallpaper;background;fractal;mandelbulb;theme;
+# Only inside btw.
+OnlyShowIn=sway;
