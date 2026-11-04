@@ -53,19 +53,28 @@ Singleton {
         n.dismiss();
     }
 
-    NotificationServer {
-        keepOnReload: false
-        actionsSupported: true
-        bodyMarkupSupported: true
-        imageSupported: true
+    // In a window inside another desktop (btw-session sets BTW_IN_WINDOW), no
+    // server: that desktop keeps its notifications. Otherwise btw, if it
+    // started first, would take them from it until btw closed.
+    readonly property bool inWindow: (Quickshell.env("BTW_IN_WINDOW") || "") !== ""
 
-        onNotification: n => {
-            n.tracked = true;
-            n.closed.connect(() => root.remove(n));
-            const shown = [n].concat(root.popups);
-            for (const old of shown.slice(root.maxPopups))
-                old.expire();
-            root.popups = shown.slice(0, root.maxPopups);
+    LazyLoader {
+        active: !root.inWindow
+
+        NotificationServer {
+            keepOnReload: false
+            actionsSupported: true
+            bodyMarkupSupported: true
+            imageSupported: true
+
+            onNotification: n => {
+                n.tracked = true;
+                n.closed.connect(() => root.remove(n));
+                const shown = [n].concat(root.popups);
+                for (const old of shown.slice(root.maxPopups))
+                    old.expire();
+                root.popups = shown.slice(0, root.maxPopups);
+            }
         }
     }
 }
