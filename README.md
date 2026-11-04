@@ -302,7 +302,7 @@ The disk image is arm64 Linux, so it builds on any machine that can run arm64 co
   emulation (on Arch: `qemu-user-static` and `qemu-user-static-binfmt`). Docker must be
   running and usable by you (`sudo systemctl start docker`, and
   `sudo usermod -aG docker $USER`, then log in again). Every arm64 program runs
-  emulated, so expect hours rather than minutes: on a 4-core laptop i3, roughly 2–4.
+  emulated, so expect hours rather than minutes: roughly 2–4 on a laptop i3-1315U.
   It needs about 15–18 GB of free disk. On a small disk, put Docker's storage on an
   external SSD (`"data-root"` in `/etc/docker/daemon.json`); that frees space, but the
   build stays just as slow, since the time goes to emulation, not the disk.
