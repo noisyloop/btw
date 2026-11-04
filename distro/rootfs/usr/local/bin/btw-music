@@ -25,10 +25,11 @@ if quickshell ipc -p "$app" show >/dev/null 2>&1; then
 fi
 
 # Qt's own PipeWire output opens a stream in the sound card's channel
-# layout, and on interfaces that name their channels AUX0, AUX1, ... rather
-# than left and right (a MOTU UltraLite, say) it plays silence. Through
-# PipeWire's PulseAudio service the stream is plain stereo, and PipeWire
-# puts it on the first two channels, as for every other app.
+# layout, and on multichannel audio interfaces (the pro and home-studio kind
+# from MOTU, Focusrite, RME, Behringer, PreSonus, Steinberg and others) that
+# name their channels AUX0, AUX1, ... rather than left and right, it plays
+# silence. Through PipeWire's PulseAudio service the stream is plain stereo,
+# and PipeWire puts it on the first two channels, as for every other app.
 if [ -z "${QT_AUDIO_BACKEND:-}" ] && command -v pactl >/dev/null && pactl info >/dev/null 2>&1; then
     export QT_AUDIO_BACKEND=pulseaudio
 fi
