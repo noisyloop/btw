@@ -110,7 +110,9 @@ or as your whole desktop.
 - Inside the window btw uses <kbd>Alt</kbd> where it would use <kbd>Super</kbd>, because your
   desktop keeps the Super shortcuts: <kbd>Alt</kbd>+<kbd>Space</kbd> apps,
   <kbd>Alt</kbd>+<kbd>Enter</kbd> terminal, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> closes it.
-- Notifications keep showing in your desktop (e.g. Omarchy's), since it already runs one.
+- Notifications keep showing in your desktop (e.g. Omarchy's): in a window, btw doesn't
+  start a notification service of its own, even if it opens while your desktop's is
+  restarting.
 
 **As your whole desktop:**
 
@@ -287,6 +289,27 @@ framework refuses to start a VM.
 make image     # Docker (arm64): pacstrap Arch Linux ARM -> out/btw-factory.img (+ .tar.gz)
 make factory   # clone it into a 32 GiB VM and boot it via EFI + systemd-boot
 ```
+
+### Without a Mac
+
+The disk image is arm64 Linux, so it builds on any machine that can run arm64 code:
+
+- **On GitHub, in minutes (the fast way):** Actions → Build → Run workflow. It builds the
+  image natively on an arm64 runner, boot-tests it, and leaves `btw-factory` as a download
+  on the run's page. It publishes a release only when `app/Info.plist` has a new version.
+- **On an arm64 Linux machine:** `make image`, as on a Mac.
+- **On an x86-64 Linux PC:** `make image` works too, through Docker and qemu-user
+  emulation (on Arch: `qemu-user-static` and `qemu-user-static-binfmt`). Docker must be
+  running and usable by you (`sudo systemctl start docker`, and
+  `sudo usermod -aG docker $USER`, then log in again). Every arm64 program runs
+  emulated, so expect hours rather than minutes: on a 4-core laptop i3, roughly 2–4.
+  It needs about 15–18 GB of free disk. On a small disk, put Docker's storage on an
+  external SSD (`"data-root"` in `/etc/docker/daemon.json`); that frees space, but the
+  build stays just as slow, since the time goes to emulation, not the disk.
+  `scripts/boot-test.py` then boots it in QEMU (`qemu-system-aarch64`, `edk2-aarch64`).
+
+Only a Mac runs btw.app, so the launcher, and sound through the Mac's speakers, can only
+be tried there.
 
 The factory disk is a GPT image: an ESP with systemd-boot, the kernel and the
 initramfs (mounted at `/boot`), and an ext4 root that grows itself to fill
