@@ -17,6 +17,7 @@ tools() {
   wallpaper set <name>     switch fractal (mandelbulb, mandelbox, sierpinski, menger)
   wallpaper still|live     the still picture, or the live fractal
   bar toggle               switch between the btw shell and waybar
+  music [files]            play ~/Music, or the files and folders given
   menu                     open the app menu
   open browser|files       your default browser or file manager
   update [branch]          update btw from GitHub

@@ -1,0 +1,28 @@
+#!/bin/sh
+# Opens Music, btw's music player: the songs in ~/Music, or the files and
+# folders given. If it's already open, hands them to it and brings it to the
+# front instead.
+#
+#   btw-music                  play ~/Music
+#   btw-music <file or folder>...
+app=${BTW_MUSIC_APP:-/usr/share/btw/music/music.qml}
+
+paths=
+for p in "$@"; do
+    [ -e "$p" ] || { echo "btw-music: no such file: $p" >&2; continue; }
+    p=$(realpath -- "$p")
+    paths="${paths:+$paths
+}$p"
+done
+[ $# -gt 0 ] && [ -z "$paths" ] && exit 1
+
+# Already open: hand it the songs (or just bring it forward).
+if quickshell ipc -p "$app" show >/dev/null 2>&1; then
+    if [ -n "$paths" ]; then
+        exec quickshell ipc -p "$app" call music open "$paths"
+    fi
+    exec swaymsg -q '[title="^Music$"] focus' 2>/dev/null
+fi
+
+BTW_MUSIC_OPEN=$paths QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}" \
+    exec setsid quickshell -p "$app" </dev/null >/dev/null 2>&1

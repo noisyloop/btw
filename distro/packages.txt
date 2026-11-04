@@ -34,6 +34,9 @@ wireplumber
 pipewire-pulse
 pipewire-jack
 qt6-declarative
+# Music (distro/music) plays through Qt Multimedia's FFmpeg backend.
+qt6-multimedia
+qt6-multimedia-ffmpeg
 firefox
 thunar
 mousepad

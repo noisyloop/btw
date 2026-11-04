@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Music
+GenericName=Music Player
+Comment=Play the music in your Music folder
+Exec=/usr/local/bin/btw-music %F
+Icon=multimedia-audio-player
+Categories=AudioVideo;Audio;Player;
+Keywords=music;player;songs;mp3;flac;audio;
+# Only inside btw, like Fractals; btw music <files> works anywhere.
+OnlyShowIn=sway;

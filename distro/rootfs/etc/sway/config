@@ -72,6 +72,8 @@ bindsym $mod+Shift+e exec swaymsg exit
 # The welcome terminal floats in the middle, just big enough for fastfetch,
 # so the fractal shows around it.
 for_window [app_id="btw-welcome"] floating enable, move position center
+# Music floats at its own size, like a small player should.
+for_window [app_id="org.quickshell" title="^Music$"] floating enable
 exec $term --app-id=btw-welcome --window-size-chars=54x11 btw-welcome
 
 include /etc/sway/config.d/*
