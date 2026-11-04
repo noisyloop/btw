@@ -8,7 +8,7 @@
 </p>
 
 <p align="center"><b>A fractal-themed Linux desktop you can try on a Mac, on Windows, or on your Arch Linux.</b><br>
-A native macOS launcher on Apple silicon, one PowerShell command on Windows, one command on Arch and Omarchy.</p>
+A native macOS launcher on Apple silicon, one download on Windows, one command on Arch and Omarchy.</p>
 
 <p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · free and open source</p>
 
@@ -208,15 +208,13 @@ other programs add panels, so the btw shell can't run there.
 
 ## Try btw on Windows
 
-On Windows, btw runs in Arch Linux inside WSL and opens as a window on your desktop. In
-PowerShell:
+On Windows, btw runs inside WSL and opens as a window on your desktop:
 
-```powershell
-irm https://raw.githubusercontent.com/noisyloop/btw/main/windows/install-btw.ps1 | iex
-```
+1. Download [btw.wsl](https://github.com/noisyloop/btw/releases/latest/download/btw.wsl).
+2. Double-click it, then choose a user name and password.
+3. btw opens. Next time, open **btw** from the Start menu.
 
-Then open **btw** from the Start menu. See [windows/README.md](windows/README.md) for what it
-does, the keys, updating and removing.
+See [windows/README.md](windows/README.md) for what it needs, the keys, updating and removing.
 
 ## Requirements
 
@@ -355,7 +353,7 @@ binaries can run in the arm64 guest.
 desktop/    browser preview of the btw desktop (temporary)
 .github/    CI, run by hand: build, test and release (dmg + disk image)
 install.sh  install btw on an existing Arch-based system, as its own login session
-windows/    btw on Windows: install-btw.ps1 (WSL + Arch + btw), btw-wsl launcher, icon
+windows/    btw on Windows: btw.wsl build (build-wsl.sh, wsl/), btw-wsl launcher, install-btw.ps1, icon
 distro/     factory disk build: Dockerfile, build.sh, package list, rootfs overlay, themes/,
             shell/ (the btw shell) and install-files.sh (puts btw in place, for both)
 app/        Swift package: the launcher (Virtualization.framework + AppKit), Info.plist, entitlements
