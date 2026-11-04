@@ -50,6 +50,13 @@ if [ -n "${WAYLAND_DISPLAY:-}" ]; then
     # launcher would hide apps and send new windows to btw).
     window="${XDG_RUNTIME_DIR:-/tmp}/btw-window.conf"
     sed -e 's/^set \$mod Mod4$/set $mod Mod1/' -e '/^include \/etc\/sway\/config\.d\//d' "$config" >"$window"
+    # Closing the window takes away Sway's only display, but Sway itself keeps
+    # running, unseen, with its bar and wallpaper. Quit once the display is
+    # gone, so closing the window closes btw.
+    cat >>"$window" <<'EOF2'
+
+exec sh -c 'sleep 5; while swaymsg -t get_outputs | grep -q "\"name\""; do sleep 2; done; swaymsg exit'
+EOF2
     config=$window
 fi
 

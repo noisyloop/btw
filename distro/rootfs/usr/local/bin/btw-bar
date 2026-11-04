@@ -1,10 +1,12 @@
 #!/bin/sh
-# Starts the btw top bar and notifications: waybar and mako, or the btw shell
-# (Quickshell), which does both. The choice is saved in ~/.config/btw/bar.
-# Only one program can show notifications, so mako runs only with waybar.
+# Starts the btw top bar and notifications: the btw shell (Quickshell), which
+# does both, or waybar and mako. The shell is the default; waybar is there if
+# you'd rather, and takes over if the shell can't start. The choice is saved
+# in ~/.config/btw/bar. Only one program can show notifications, so mako runs
+# only with waybar.
 #
 #   btw-bar start    start the chosen bar (Sway runs this at login)
-#   btw-bar toggle   switch between waybar and the btw shell (Super+Shift+B)
+#   btw-bar toggle   switch between the btw shell and waybar (Super+Shift+B)
 #   btw-bar which    print the chosen bar
 #   btw-bar running  print what's running in this btw session (shell, waybar or nothing)
 #
@@ -22,7 +24,7 @@ log="$HOME/.local/state/btw-bar.log"
 pids="${XDG_RUNTIME_DIR:-/tmp}/btw-bar.$(basename "${SWAYSOCK:-default}").pids"
 
 chosen() {
-    if [ "$(cat "$conf" 2>/dev/null)" = shell ] && command -v quickshell >/dev/null; then
+    if [ "$(cat "$conf" 2>/dev/null)" != waybar ] && command -v quickshell >/dev/null; then
         echo shell
     else
         echo waybar
@@ -34,7 +36,7 @@ chosen() {
 ours() {
     [ -f "$pids" ] || return 0
     while read -r kind pid; do
-        case "$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null)" in
+        case "$(tr '\0' ' ' 2>/dev/null <"/proc/$pid/cmdline")" in
         *"quickshell -p $shell"* | *"$btwconf/"*) echo "$kind $pid" ;;
         esac
     done <"$pids"
@@ -53,26 +55,41 @@ stop() {
     rm -f "$pids"
 }
 
+waybar_and_mako() {
+    setsid waybar -c "$btwconf/waybar/config.jsonc" -s "$btwconf/waybar/style.css" >>"$log" 2>&1 </dev/null &
+    echo "waybar $!" >>"$pids"
+    # If another desktop's notification service is running (e.g. Omarchy's
+    # mako, when btw runs alongside it), this mako exits and notifications
+    # keep showing there.
+    setsid mako --config "$btwconf/mako/config" >>"$log" 2>&1 </dev/null &
+    echo "mako $!" >>"$pids"
+}
+
 start() {
     stop
     mkdir -p "$(dirname "$log")"
     mkdir -p "$(dirname "$pids")"
+    : >"$log"
     if [ "$(chosen)" = shell ]; then
         # Without a GPU (Sway drawing with pixman, as in the Mac VM), Qt Quick
         # uses its software renderer too. Set QT_QUICK_BACKEND to override.
         backend=${QT_QUICK_BACKEND:-}
         [ "${WLR_RENDERER:-}" = pixman ] && backend=${backend:-software}
         QT_QUICK_BACKEND=$backend QT_QPA_PLATFORM=wayland \
-            setsid quickshell -p "$shell" >"$log" 2>&1 </dev/null &
-        echo "shell $!" >>"$pids"
+            setsid quickshell -p "$shell" >>"$log" 2>&1 </dev/null &
+        pid=$!
+        echo "shell $pid" >>"$pids"
+        # If the shell quits straight away (a broken Quickshell, a QML error),
+        # don't leave btw without a bar: use waybar this time, and say why.
+        sleep 2
+        if ! kill -0 "$pid" 2>/dev/null; then
+            echo "btw-bar: the btw shell quit; starting waybar instead" >>"$log"
+            rm -f "$pids"
+            waybar_and_mako
+            notify "The btw shell didn't start, so this is waybar. Details: $log" &
+        fi
     else
-        setsid waybar -c "$btwconf/waybar/config.jsonc" -s "$btwconf/waybar/style.css" >"$log" 2>&1 </dev/null &
-        echo "waybar $!" >>"$pids"
-        # If another desktop's notification service is running (e.g. Omarchy's
-        # mako, when btw runs alongside it), this mako exits and notifications
-        # keep showing there.
-        setsid mako --config "$btwconf/mako/config" >>"$log" 2>&1 </dev/null &
-        echo "mako $!" >>"$pids"
+        waybar_and_mako
     fi
 }
 

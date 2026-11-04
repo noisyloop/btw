@@ -82,8 +82,10 @@ ready-made disk. So:
       only `Sway.qml` talks to Sway, so it can move to niri with btw. Steps:
       the top bar next to waybar behind a toggle, the app menu in place of
       fuzzel and notifications in place of mako (all done, needing a test in
-      the VM for CPU use); then making the shell the default and dropping
-      waybar, fuzzel and mako. A lock screen matters only on real hardware
+      the VM for CPU use); the shell is now the default, with waybar, fuzzel
+      and mako kept as a fallback until it has been tested in the VM, then
+      dropped. The first btw app is **Fractals** (`distro/wallpaper/`),
+      which picks and tunes the live wallpaper. A lock screen matters only on real hardware
       (on a Mac, macOS locks the screen), so it waits for that.
 - [x] **btw on any Arch system.** `install.sh` installs btw as its own Sway
       session next to the existing desktop (e.g. Omarchy's Hyprland), with

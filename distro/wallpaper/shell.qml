@@ -1,18 +1,20 @@
 // btw's live wallpaper: the raymarched fractal from the browser preview, on
 // the background layer of every display. btw-wallpaper starts it with
-// `quickshell -p /usr/share/btw/wallpaper` and picks the fractal through
-// BTW_FRACTAL (mandelbox, mandelbulb, sierpinski or menger).
+// `quickshell -p /usr/share/btw/wallpaper`. The fractal, colors and motion
+// come from Settings.qml (~/.config/btw/wallpaper.conf) and change live when
+// the Fractals app edits them.
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
 
 ShellRoot {
     id: root
+    // Installed files change only when btw is updated, and the new files land
+    // one at a time; a reload halfway through would fail. Restart instead.
+    settings.watchFiles: false
 
-    readonly property var distances: ({ mandelbox: 6.2, mandelbulb: 2.5, sierpinski: 2.9, menger: 3.4 })
-    readonly property string fractal: {
-        const name = Quickshell.env("BTW_FRACTAL") || "mandelbulb";
-        return name in distances ? name : "mandelbulb";
+    Settings {
+        id: settings
     }
     // Render resolution relative to the screen: raymarching every pixel is
     // costly, and the fractal is soft enough that half looks the same.
@@ -24,12 +26,12 @@ ShellRoot {
     // GPU time of following the display's refresh rate.
     Timer {
         interval: 33
-        running: true
+        running: settings.speed > 0
         repeat: true
         property double last: Date.now()
         onTriggered: {
             const now = Date.now();
-            root.clock += Math.min(0.1, (now - last) / 1000);
+            root.clock += Math.min(0.1, (now - last) / 1000) * settings.speed;
             last = now;
         }
     }
@@ -56,10 +58,10 @@ ShellRoot {
                 anchors.fill: parent
                 property vector2d res: Qt.vector2d(width, height)
                 property real time: root.clock
-                property real hue: 0.0
-                property real glow: 1.15
-                property real dist: root.distances[root.fractal]
-                fragmentShader: Qt.resolvedUrl(root.fractal + ".frag.qsb")
+                property real hue: settings.hue
+                property real glow: settings.glow
+                property real dist: settings.dist
+                fragmentShader: settings.shader(settings.fractal)
 
                 layer.enabled: true
                 layer.smooth: true
