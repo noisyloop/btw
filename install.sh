@@ -18,6 +18,7 @@
 # Hyprland) stays exactly as it is.
 set -euo pipefail
 REPO="${BTW_REPO:-https://github.com/noisyloop/btw.git}"
+BRANCH="${BTW_BRANCH:-main}"
 SRC="${XDG_DATA_HOME:-$HOME/.local/share}/btw/src"
 
 # Sway and its helpers, the btw shell, and what the desktop scripts use.
@@ -62,11 +63,11 @@ elif [[ "${mode:-}" != uninstall ]]; then
   command -v git >/dev/null || die "git is missing (sudo pacman -S git)."
   step "Fetching btw"
   if [[ -d "$SRC/.git" ]]; then
-    git -C "$SRC" fetch -q --depth 1 origin main
+    git -C "$SRC" fetch -q --depth 1 origin "$BRANCH"
     git -C "$SRC" reset -q --hard FETCH_HEAD
   else
     mkdir -p "$(dirname "$SRC")"
-    git clone -q --depth 1 "$REPO" "$SRC"
+    git clone -q --depth 1 --branch "$BRANCH" "$REPO" "$SRC"
   fi
   exec bash "$SRC/install.sh" "$@"
 fi
