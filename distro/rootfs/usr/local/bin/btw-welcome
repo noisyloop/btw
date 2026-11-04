@@ -1,0 +1,19 @@
+#!/bin/sh
+# The terminal btw opens when the desktop starts: fastfetch, then a shell.
+# On a new Mac VM, which has no password yet, it first asks for one.
+if [ -e /var/lib/btw/choose-password ] && [ -x /usr/local/lib/btw/set-password ]; then
+    printf '\n  Welcome to btw. Choose a password:\n  sudo asks for it.\n\n'
+    tries=0
+    until sudo -n /usr/local/lib/btw/set-password; do
+        tries=$((tries + 1))
+        if [ $tries -ge 3 ] || [ ! -e /var/lib/btw/choose-password ]; then
+            printf '\n  Later: sudo /usr/local/lib/btw/set-password\n'
+            sleep 3
+            break
+        fi
+        printf '\n  Try again.\n\n'
+    done
+    clear
+fi
+command -v fastfetch >/dev/null && fastfetch -c /usr/share/btw/config/fastfetch/config.jsonc
+exec "${SHELL:-bash}"

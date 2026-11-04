@@ -3,11 +3,15 @@
   1. boots through systemd-boot and logs in automatically on the console (hvc0),
   2. grows its root filesystem to fill a larger disk,
   3. resolves DNS names and has the desktop installed,
-  4. powers off cleanly when asked.
+  4. has a sound card (the virtio sound driver, built by DKMS),
+  5. is locked down: its firewall is on, sshd is off, and the user's first
+     password is set through set-password (there's no factory password),
+  6. powers off cleanly when asked.
 
   scripts/boot-test.py out/btw-factory.img [disk GiB, default 16]
 
-Needs qemu-system-aarch64 and the qemu-efi-aarch64 firmware. Uses KVM when
+Needs qemu-system-aarch64 (8.2 or newer, for virtio-sound) and the
+qemu-efi-aarch64 firmware. Uses KVM when
 /dev/kvm is usable, otherwise TCG (slow, but CI runners have no nested virt).
 """
 import os
@@ -19,6 +23,7 @@ import sys
 import tempfile
 import time
 
+PASSWORD = b"boot-test-only"
 FIRMWARE = ["/usr/share/qemu-efi-aarch64/QEMU_EFI.fd", "/usr/share/AAVMF/AAVMF_CODE.fd"]
 
 
@@ -50,6 +55,9 @@ def main():
         "-bios", firmware, "-display", "none", "-serial", "null",
         "-drive", f"file={disk},if=virtio,format=raw",
         "-nic", "user,model=virtio-net-pci",
+        # The sound device the Mac gives the VM, minus the speakers.
+        "-audiodev", "none,id=snd",
+        "-device", "virtio-sound-pci,audiodev=snd",
         # A virtio console shows up as hvc0, like Virtualization.framework's.
         "-device", "virtio-serial-pci",
         "-chardev", f"socket,id=con,path={sock},server=on,wait=off",
@@ -82,7 +90,52 @@ def main():
         if desktop != b"ok":
             fail("the desktop packages are missing")
 
-        console.sendall(b"echo btw | sudo -S systemctl poweroff\n")
+        # The Mac's VMs only have virtio sound; linux-aarch64 lacks its driver.
+        console.sendall(b"echo SOUND-$(grep -qi virtio /proc/asound/cards 2>/dev/null && echo ok || echo none)\n")
+        sound = expect(console, qemu, rb"SOUND-(ok|none)", 60).group(1)
+        print(f"\n== sound card: {sound.decode()}", flush=True)
+        if sound != b"ok":
+            console.sendall(b"cat /proc/asound/cards; modinfo virtio_snd | head -3; dkms status\n")
+            drain(console, 8)
+            fail("no virtio sound card in the VM")
+
+        # No factory password: sudo can't be used with one...
+        console.sendall(b"echo btw | sudo -S -k true 2>/dev/null; echo FACTORY-PW-$?\n")
+        factory = expect(console, qemu, rb"FACTORY-PW-(\d+)", 60).group(1)
+        print(f"\n== factory password refused: {factory != b'0'}", flush=True)
+        if factory == b"0":
+            fail("sudo accepted the password 'btw'")
+        # ...until the first one is chosen, as the welcome terminal does.
+        console.sendall(b"sudo -n /usr/local/lib/btw/set-password\n")
+        expect(console, qemu, rb"New password:", 60)
+        console.sendall(PASSWORD + b"\n")
+        expect(console, qemu, rb"Retype new password:", 30)
+        console.sendall(PASSWORD + b"\n")
+        console.sendall(b"echo MARKER-$(test -e /var/lib/btw/choose-password && echo left || echo gone)\n")
+        marker = expect(console, qemu, rb"MARKER-(left|gone)", 60).group(1)
+        print(f"\n== first password set: {marker == b'gone'}", flush=True)
+        if marker != b"gone":
+            fail("set-password didn't set the first password")
+        console.sendall(b"sudo -n /usr/local/lib/btw/set-password; echo AGAIN-$?\n")
+        again = expect(console, qemu, rb"AGAIN-(\d+)", 30).group(1)
+        if again == b"0":
+            fail("set-password ran a second time")
+
+        def as_root(command, label):
+            console.sendall(b"echo %s | sudo -S -p '' sh -c '%s' >/dev/null 2>&1 && echo %s-ok || echo %s-fail\n"
+                            % (PASSWORD, command, label, label))
+            return expect(console, qemu, rb"%s-(ok|fail)" % label, 60).group(1) == b"ok"
+        firewall = as_root(b"nft list chain inet btw input | grep -q \"policy drop\"", b"FIREWALL")
+        print(f"\n== firewall on: {firewall}", flush=True)
+        if not firewall:
+            fail("the firewall isn't loaded")
+        console.sendall(b"echo SSHD-$(systemctl is-active sshd)\n")
+        sshd = expect(console, qemu, rb"SSHD-(\w+)", 30).group(1)
+        print(f"\n== sshd: {sshd.decode()}", flush=True)
+        if sshd == b"active":
+            fail("sshd is running")
+
+        console.sendall(b"echo %s | sudo -S -p '' systemctl poweroff\n" % PASSWORD)
         try:
             qemu.wait(timeout=180)
         except subprocess.TimeoutExpired:

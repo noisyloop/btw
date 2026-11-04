@@ -72,6 +72,6 @@ bindsym $mod+Shift+e exec swaymsg exit
 # The welcome terminal floats in the middle, just big enough for fastfetch,
 # so the fractal shows around it.
 for_window [app_id="btw-welcome"] floating enable, move position center
-exec $term --app-id=btw-welcome --window-size-chars=54x11 sh -c 'command -v fastfetch >/dev/null && fastfetch -c /usr/share/btw/config/fastfetch/config.jsonc; exec "${SHELL:-bash}"'
+exec $term --app-id=btw-welcome --window-size-chars=54x11 btw-welcome
 
 include /etc/sway/config.d/*

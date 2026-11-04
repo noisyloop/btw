@@ -279,10 +279,37 @@ make factory   # clone it into a 32 GiB VM and boot it via EFI + systemd-boot
 
 The factory disk is a GPT image: an ESP with systemd-boot, the kernel and the
 initramfs (mounted at `/boot`), and an ext4 root that grows itself to fill
-whatever disk size the launcher gives the VM. It logs in automatically as `btw`
-(password `btw`; change it with `passwd`). On the VM's screen it starts the desktop;
-the serial console and SSH stay plain shells. Packages are listed in
-`distro/packages.txt`, and config files are overlaid from `distro/rootfs/`.
+whatever disk size the launcher gives the VM. It logs in automatically as `btw` and, on
+the VM's screen, starts the desktop; the serial console stays a plain shell. Packages are
+listed in `distro/packages.txt`, and config files are overlaid from `distro/rootfs/`.
+
+The VM is locked down from the start:
+
+- **No factory password.** The account has none until the first desktop's welcome
+  terminal asks you to choose one (from the serial console:
+  `sudo /usr/local/lib/btw/set-password`). Until then nothing can sudo or log in with a
+  password. Change it later with `passwd`.
+- **No SSH server.** `sshd` is installed but off, and if you turn it on
+  (`sudo systemctl enable --now sshd`) it accepts keys only, never passwords.
+- **An always-on firewall** (`/etc/nftables.conf`). The VM can reach the internet and
+  nothing else: not your Mac, your LAN or other VMs, except DNS and DHCP from the Mac's
+  NAT. Nothing can connect in. To open a hole, e.g. for SSH from the Mac, put a rule such
+  as `tcp dport 22 ip saddr 192.168.64.1 accept` in `/etc/nftables.d/ssh.input.nft` and
+  run `sudo nft -f /etc/nftables.conf`.
+
+The firewall keeps programs in the VM, and anyone who gets in as your user, away from
+your Mac and your network. Root in the VM can turn the firewall off, so what contains root
+is the VM itself (Apple's Virtualization framework). A VPN on the Mac doesn't change any
+of this: the VM's traffic just goes through it like the Mac's own.
+
+**Sound:** the Mac gives the VM a virtio sound device, but Arch Linux ARM's `linux-aarch64`
+kernel doesn't build the driver for it, so the VM had no sound card. btw builds the driver
+from `distro/dkms/virtio-snd` (Linux's own `sound/virtio`, unchanged) with DKMS, which
+rebuilds it after every kernel update.
+
+VMs made from an older btw disk still have the password `btw` and SSH on. To fix one
+without starting over: `passwd`, then `sudo systemctl disable --now sshd`. Sound and the
+firewall need the new disk.
 
 ### The desktop
 

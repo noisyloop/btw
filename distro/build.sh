@@ -23,6 +23,9 @@ pacstrap -c "$root" "${packages[@]}"
 # Plain -r so files end up owned by root, not by whoever owns the checkout.
 cp -r "$src/rootfs/." "$root/"
 chmod 0440 "$root/etc/sudoers.d/wheel"
+# The virtio sound driver's source, for DKMS (built in the chroot below).
+install -d "$root/usr/src/virtio-snd-7.3"
+install -m644 "$src"/dkms/virtio-snd/* "$root/usr/src/virtio-snd-7.3/"
 # The btw desktop (scripts, configs, shell, theme, wallpaper), the same way
 # install.sh puts it on an existing Arch system.
 "$src/install-files.sh" "$root"
@@ -64,14 +67,24 @@ sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
 locale-gen
+# No password: btw logs in by itself on the VM's screen, and the desktop's
+# welcome terminal asks for one (usr/local/lib/btw/set-password). Until then
+# the account can't be logged into or sudo with a password.
 useradd -m -G wheel -s /bin/bash btw
-echo btw:btw | chpasswd
-systemctl enable systemd-networkd systemd-resolved systemd-timesyncd sshd
+usermod -p "!" btw
+install -d -m755 /var/lib/btw
+touch /var/lib/btw/choose-password
+# No sshd: it's there for whoever wants it, keys only (etc/ssh/sshd_config.d).
+# The firewall (etc/nftables.conf) is always on.
+systemctl enable systemd-networkd systemd-resolved systemd-timesyncd nftables
 mkdir -p /etc/systemd/system/sysinit.target.wants
 ln -sf /usr/lib/systemd/system/systemd-repart.service /etc/systemd/system/sysinit.target.wants/
 
 # autodetect would size the initramfs for the build container, not the VM.
 kver="$(ls /usr/lib/modules | head -n1)"
+# Sound: the Mac's virtio sound device needs a driver linux-aarch64 lacks.
+dkms install virtio-snd/7.3 -k "$kver"
+modinfo -k "$kver" virtio_snd >/dev/null
 mkinitcpio -k "$kver" -g /boot/initramfs-linux.img -S autodetect
 rm -f /boot/initramfs-linux-fallback.img
 CHROOT

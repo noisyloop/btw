@@ -1,1 +1,5 @@
 %wheel ALL=(ALL:ALL) ALL
+# A new VM's first password (see /usr/local/lib/btw/set-password); no
+# arguments allowed. It must come after the line above, since the last match
+# wins.
+btw ALL=(root) NOPASSWD: /usr/local/lib/btw/set-password ""
