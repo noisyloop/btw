@@ -22,7 +22,16 @@ ShellRoot {
     readonly property string home: Quickshell.env("HOME")
     readonly property string library: Quickshell.env("BTW_MUSIC_DIR")
         || Quickshell.env("XDG_MUSIC_DIR") || home + "/Music"
-    readonly property var extensions: ["mp3", "flac", "ogg", "oga", "opus", "m4a", "aac", "wav", "wma", "alac", "aiff", "ape", "mka"]
+    readonly property var extensions: ["mp3", "flac", "ogg", "oga", "opus", "m4a", "aac", "wav", "aiff", "aif"]
+
+    // Every file is a possible attack on the decoder, and FFmpeg goes by
+    // what's in a file, not its name. So a song is checked by ffprobe first,
+    // allowed to read only local files (no URLs: a playlist disguised as a
+    // song can't fetch anything) and to use only these audio formats (FFmpeg's
+    // names; "mov" is MP4/M4A). Only a file that passes is handed to the
+    // player, which can't be told the same rules itself.
+    readonly property string formats: "mp3,flac,ogg,mov,wav,aiff,aac"
+    readonly property var safeInput: ["-protocol_whitelist", "file", "-format_whitelist", formats]
 
     // Everything loaded, as file paths, and the indices of those the search
     // lets through (the list on screen).
@@ -122,12 +131,19 @@ ShellRoot {
     function play(i) {
         if (i < 0 || i >= tracks.length)
             return;
-        if (current >= 0 && current !== i)
-            history.push(current);
-        current = i;
         status = "";
-        player.source = "file://" + tracks[i].split("/").map(encodeURIComponent).join("/");
-        player.play();
+        if (i === current && player.source.toString() !== "") {
+            player.position = 0;
+            player.play();
+        } else {
+            if (current >= 0)
+                history.push(current);
+            player.stop();
+            player.source = "";
+            if (i === current)
+                current = -1; // so the file is checked again
+            current = i; // checks the file; it plays once it passes (probe, below)
+        }
         list.currentIndex = Math.max(0, shown.indexOf(i));
         list.positionViewAtIndex(list.currentIndex, ListView.Contain);
     }
@@ -223,12 +239,23 @@ ShellRoot {
         const path = tracks[current];
         probe.found = {};
         probe.path = path;
-        probe.command = ["ffprobe", "-v", "quiet", "-show_entries", "format_tags:stream_tags",
+        probe.format = "";
+        probe.command = ["ffprobe", "-v", "quiet", ...safeInput,
+            "-show_entries", "format=format_name:format_tags:stream_tags",
             "-of", "default=noprint_wrappers=1", path];
         probe.running = true;
+    }
+    // A checked song: play it, and measure its waveform.
+    function accepted(path) {
+        const url = "file://" + path.split("/").map(encodeURIComponent).join("/");
+        // Already playing it (the list was reloaded around it): carry on.
+        if (player.source.toString() !== url) {
+            player.source = url;
+            player.play();
+        }
         measure.found = [];
         measure.path = path;
-        measure.command = ["ffmpeg", "-nostdin", "-v", "error", "-i", path, "-vn", "-ac", "1", "-af",
+        measure.command = ["ffmpeg", "-nostdin", "-v", "error", ...safeInput, "-i", path, "-vn", "-ac", "1", "-af",
             "aresample=8000,asetnsamples=n=400:p=0,astats=metadata=1:reset=1,"
             + "ametadata=print:key=lavfi.astats.Overall.RMS_level:file=-", "-f", "null", "-"];
         measure.running = true;
@@ -261,16 +288,28 @@ ShellRoot {
         id: probe
         property var found: ({})
         property string path
+        property string format
         stdout: SplitParser {
             onRead: line => {
+                if (line.startsWith("format_name=")) {
+                    probe.format = line.slice(12);
+                    return;
+                }
                 const m = /^TAG:([^=]+)=(.*)$/.exec(line);
                 if (m && m[2] && !(m[1].toLowerCase() in probe.found))
                     probe.found[m[1].toLowerCase()] = m[2];
             }
         }
         onExited: (code, exitStatus) => {
-            if (path === root.tracks[root.current])
-                root.tags = found;
+            if (path !== root.tracks[root.current])
+                return;
+            if (code !== 0 || format === "") {
+                root.status = "Skipped " + root.title(path) + ": not a supported audio file.";
+                skip.restart();
+                return;
+            }
+            root.tags = found;
+            root.accepted(path);
         }
     }
     function tag(qt, name) {

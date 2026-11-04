@@ -60,6 +60,7 @@ for f in "$src"/music/*.qml; do
   put 644 "$f" "/usr/share/btw/music/$(basename "$f")"
 done
 put 644 "$src/btw-music.desktop" /usr/share/applications/btw-music.desktop
+put 644 "$src/../assets/MusicIcon.svg" /usr/share/icons/hicolor/scalable/apps/btw-music.svg
 put 644 "$src/../assets/AppIcon.svg" /usr/share/icons/hicolor/scalable/apps/btw.svg
 put 644 "$src/../assets/AppIcon.png" /usr/share/pixmaps/btw.png
 

@@ -166,12 +166,18 @@ btw's own apps are part of btw itself:
 
 - **Fractals** picks and tunes the wallpaper (`btw fractals`).
 - **Music**, a small music player (`btw music`, or `btw music <files or folders>`). It plays
-  the songs in `~/Music` (MP3, FLAC, Ogg, Opus, M4A, WAV and more), with search, shuffle,
+  the songs in `~/Music` (MP3, FLAC, Ogg, Opus, M4A/AAC, WAV and AIFF), with search, shuffle,
   repeat and a waveform of the song that's also the seek bar, so you can follow a song
   even with the sound off. Drop files on it to play them. Keys: <kbd>Space</kbd>
   play/pause, <kbd>←</kbd>/<kbd>→</kbd> seek, <kbd>Ctrl</kbd>+<kbd>←</kbd>/<kbd>→</kbd>
   previous/next, <kbd>/</kbd> search. It's QML (`distro/music`) on Quickshell and Qt
   Multimedia, and reads tags and the waveform with ffmpeg.
+
+  Every song is checked before it plays, because a deliberately broken file is the usual
+  way to attack a media player, and FFmpeg goes by what's inside a file, not its name.
+  ffprobe opens it allowed only local files (so a playlist dressed up as a song can't
+  fetch anything) and only those audio formats; anything else is skipped with "not a
+  supported audio file", and the player never opens it.
 
 `./install.sh` and `btw update` fetch and build them, and add the build tools they need
 (base-devel, cmake, ninja, pipewire-jack, qt6-declarative). If one fails to build, btw installs
