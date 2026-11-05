@@ -10,7 +10,7 @@
 <p align="center"><b>A fractal-themed Linux desktop you can try on a Mac, on Windows, or on your Arch Linux.</b><br>
 A native macOS launcher on Apple silicon, one PowerShell command on Windows, one command on Arch and Omarchy.</p>
 
-<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · <b>PC ISO</b> (under construction) · free and open source</p>
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · <b>PC ISO</b> (under construction) · <a href="LAB.md"><b>Lab</b></a> · free and open source</p>
 
 <p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
 
@@ -445,6 +445,15 @@ If Rosetta for Linux is installed on the host (`softwareupdate --install-rosetta
 it is exposed to the guest under the `rosetta` virtiofs tag, so x86-64 Linux
 binaries can run in the arm64 guest.
 
+## Lab
+
+[LAB.md](LAB.md) is btw's lab notebook: what we tried while building it, what broke, how
+we dug in to find out why (much of it reverse engineering), and the fundamentals we took
+away. btw is locked down from the start (pinned signatures, no factory password, no SSH,
+an always-on firewall, media files checked before they're parsed), and the lab explains
+why each of those exists. It also lists the open edges we know about. To report a bug or
+a vulnerability, open an issue instead.
+
 ## Layout
 
 ```
@@ -458,4 +467,5 @@ app/        Swift package: the launcher (Virtualization.framework + AppKit), Inf
 assets/     the app icon (AppIcon.png, from scripts/make-icon.py)
 scripts/    fetch known-good test kernels/ISOs (checksum-verified), package the .app/.dmg, boot tests
 docs/       plan and design notes
+LAB.md      the lab notebook: experiments, what we learned and the open edges
 ```
