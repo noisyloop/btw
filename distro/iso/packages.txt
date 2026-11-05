@@ -1,0 +1,29 @@
+# What the PC ISO adds to btw's packages (../packages.txt, minus the Mac VM's
+# arm64 kernel, its keyring and DKMS). build-iso.sh merges the two lists.
+
+# A PC's kernel, its drivers' firmware (Wi-Fi, graphics, sound) and CPU fixes.
+linux
+linux-firmware
+sof-firmware
+alsa-ucm-conf
+intel-ucode
+amd-ucode
+mesa
+
+# Booting the live USB (archiso) and installing it (btw-install).
+mkinitcpio-archiso
+syslinux
+grub
+efibootmgr
+arch-install-scripts
+dosfstools
+e2fsprogs
+
+# Wired and Wi-Fi networking ("Wi-Fi" in the app menu is nmtui).
+networkmanager
+
+# Small everyday apps: pictures, video and music files, PDFs.
+imv
+mpv
+zathura
+zathura-pdf-mupdf

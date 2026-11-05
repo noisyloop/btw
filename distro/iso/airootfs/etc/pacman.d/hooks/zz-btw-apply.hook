@@ -1,0 +1,15 @@
+# remove from airootfs!
+# Puts btw's files over what the packages installed, once every package is
+# in (see build-iso.sh). It removes itself, with the hook below.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = *
+
+[Action]
+Description = Putting btw's files in place...
+When = PostTransaction
+Depends = bash
+Depends = coreutils
+Exec = /bin/bash /var/lib/btw-iso/apply.sh

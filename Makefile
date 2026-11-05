@@ -1,7 +1,7 @@
 BTW := app/.build/release/btw
 CACHE := .cache
 
-.PHONY: build smoke gui image boot-test factory dmg preview clean
+.PHONY: build smoke gui image boot-test factory dmg preview clean iso iso-test
 
 # Builds the launcher and ad-hoc signs it with the virtualization entitlement;
 # without the entitlement, Virtualization.framework refuses to start a VM.
@@ -26,6 +26,14 @@ gui: build
 image:
 	docker build --platform linux/arm64 -t btw-builder distro
 	docker run --rm --privileged --platform linux/arm64 -v "$(CURDIR)":/work btw-builder /work/distro/build.sh
+
+# btw for PCs: the x86-64 live/install ISO, built with archiso in Docker -> out/btw-<version>-x86_64.iso.
+iso:
+	docker run --rm --privileged -v "$(CURDIR)":/work archlinux:latest /work/distro/iso/build-iso.sh
+
+# Linux + QEMU: boot the ISO, install it to a blank disk, boot that (screenshots in iso-test/).
+iso-test:
+	scripts/iso-test.py out/btw-*-x86_64.iso iso-test
 
 # Linux + QEMU: boot the image and check it logs in, grows its root and powers off.
 boot-test:

@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# Installs btw from the live USB onto a disk of this PC: "Install btw" in the
+# app menu. It copies the live system as it came on the USB (no internet
+# needed), so the PC gets exactly what you tried.
+#
+#   sudo btw-install
+#
+# The disk you pick is erased and gets: a 1 MiB BIOS boot partition, a 1 GiB
+# EFI system partition (mounted at /boot) and an ext4 root for the rest.
+# GRUB is set up for both BIOS and UEFI, so the disk starts either way.
+set -euo pipefail
+
+mnt=/mnt/btw-install
+
+say() { printf '\n  %s\n' "$@"; }
+pause() { read -rp $'\n  Press Enter to close. ' _ || true; }
+die() { printf '\n  %s\n' "$@" >&2; pause; exit 1; }
+cleanup() { mountpoint -q "$mnt" && umount -R "$mnt" 2>/dev/null; true; }
+failed() {
+    printf '\n  Installing stopped with an error (line %s). The disk may be half set up:\n  run Install btw again to start over.\n' "$1" >&2
+    cleanup
+    pause
+    exit 1
+}
+trap 'failed $LINENO' ERR
+
+[[ $EUID -eq 0 ]] || exec sudo "$0" "$@"
+[[ -d /run/archiso ]] || die "Install btw runs from the btw live USB."
+
+# The live system as it is on the USB, without what's changed since it booted.
+src=/run/archiso/airootfs
+[[ -d $src/usr/bin ]] || die "Can't find the live system's files ($src)."
+
+clear
+say "Install btw" "" "This puts btw on a disk of this PC. The disk you choose is erased."
+
+# --- which disk ------------------------------------------------------------------
+# Not the USB btw is running from.
+usb=$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null || true)
+usb_disk=
+[[ -n $usb ]] && usb_disk=/dev/$(lsblk -no PKNAME "$usb" 2>/dev/null | head -n1)
+disks=()
+while read -r name type ro; do
+    [[ $type == disk && $ro == 0 && $name != "$usb_disk" && $name != /dev/zram* ]] && disks+=("$name")
+done < <(lsblk -dnpo NAME,TYPE,RO)
+((${#disks[@]})) || die "No disk to install on was found (the USB stick itself doesn't count)."
+
+say "Disks:"
+for i in "${!disks[@]}"; do
+    printf '    %d) %s  %s  %s\n' $((i + 1)) "${disks[i]}" \
+        "$(lsblk -dno SIZE "${disks[i]}" | tr -d ' ')" "$(lsblk -dno MODEL "${disks[i]}" | sed 's/ *$//')"
+done
+while :; do
+    read -rp $'\n  Install on disk number: ' n
+    [[ $n =~ ^[0-9]+$ ]] && ((n >= 1 && n <= ${#disks[@]})) && break
+    echo "  Type one of the numbers above."
+done
+disk=${disks[n - 1]}
+desc="$disk ($(lsblk -dno SIZE "$disk" | tr -d ' ') $(lsblk -dno MODEL "$disk" | sed 's/ *$//'))"
+if lsblk -no MOUNTPOINTS "$disk" | grep -q .; then
+    say "Something on $disk is in use (mounted). Unmount it first."
+    lsblk "$disk"
+    die ""
+fi
+
+# --- password and time zone ----------------------------------------------------
+say "Choose a password for the btw user. You log in and use sudo with it."
+while :; do
+    read -rsp "  Password: " pw; echo
+    read -rsp "  Again: " pw2; echo
+    [[ -n $pw && $pw == "$pw2" ]] && break
+    if [[ -z $pw ]]; then echo "  It can't be empty."; else echo "  They didn't match. Try again."; fi
+done
+unset pw2
+
+tz=UTC
+while :; do
+    read -rp $'\n  Time zone, e.g. Europe/Berlin or America/New_York [UTC]: ' t
+    t=${t:-UTC}
+    [[ $t != *..* && -f /usr/share/zoneinfo/$t ]] && { tz=$t; break; }
+    echo "  Not a time zone I know. It's Region/City, like America/Chicago."
+done
+
+say "Everything on $desc will be erased." ""
+read -rp "  Type erase to install btw on it: " ok
+[[ $ok == erase ]] || die "Nothing was changed."
+
+# --- disk ------------------------------------------------------------------------
+part() { if [[ $1 =~ [0-9]$ ]]; then echo "${1}p$2"; else echo "$1$2"; fi; }
+say "Partitioning $disk..."
+wipefs -qa "$disk"
+sfdisk -q "$disk" <<'SFDISK'
+label: gpt
+size=1MiB, type=21686148-6453-6F6E-6574-614E65656449, name=bios
+size=1GiB, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name=esp
+type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709, name=root
+SFDISK
+udevadm settle
+esp=$(part "$disk" 2)
+root=$(part "$disk" 3)
+mkfs.fat -F 32 -n BTW-ESP "$esp" >/dev/null
+mkfs.ext4 -q -F -L btw-root "$root"
+mkdir -p "$mnt"
+mount "$root" "$mnt"
+mkdir -p "$mnt/boot"
+mount -o fmask=0077,dmask=0077 "$esp" "$mnt/boot"
+
+# --- copy -------------------------------------------------------------------------
+say "Copying btw ($(du -sh --apparent-size "$src" 2>/dev/null | cut -f1)). This takes a few minutes..."
+cp -a "$src/." "$mnt/"
+# A kernel for /boot: the live system's, which the linux package keeps here too.
+kver=$(basename "$(ls -d "$mnt"/usr/lib/modules/*/ | head -n1)")
+cp "$mnt/usr/lib/modules/$kver/vmlinuz" "$mnt/boot/vmlinuz-linux"
+
+# Only for the live USB: its initramfs, sudo without a password, logging in
+# by itself, keeping the PC's partitions unmounted, and the installer itself.
+rm -f "$mnt/etc/mkinitcpio.conf.d/archiso.conf" "$mnt/etc/sudoers.d/btw-live" \
+    "$mnt/usr/local/bin/btw-install" "$mnt/usr/share/applications/btw-install.desktop" \
+    "$mnt/etc/systemd/system-generators/systemd-gpt-auto-generator"
+rm -rf "$mnt/etc/systemd/system/getty@tty1.service.d"
+
+genfstab -U "$mnt" >"$mnt/etc/fstab"
+echo btw >"$mnt/etc/hostname"
+ln -sf "/usr/share/zoneinfo/$tz" "$mnt/etc/localtime"
+printf 'uninitialized\n' >"$mnt/etc/machine-id"
+
+# --- inside the new system -------------------------------------------------------
+say "Setting up the new system..."
+printf 'btw:%s\n' "$pw" | arch-chroot "$mnt" chpasswd
+unset pw
+arch-chroot "$mnt" mkinitcpio -P >/dev/null
+sed -i -e 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="btw"/' -e 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=2/' \
+    "$mnt/etc/default/grub"
+arch-chroot "$mnt" grub-install --target=i386-pc "$disk" >/dev/null 2>&1
+arch-chroot "$mnt" grub-install --target=x86_64-efi --efi-directory=/boot --boot-directory=/boot \
+    --removable >/dev/null 2>&1
+# Booted through UEFI: also add btw to the PC's boot menu.
+if [[ -d /sys/firmware/efi ]]; then
+    arch-chroot "$mnt" grub-install --target=x86_64-efi --efi-directory=/boot --boot-directory=/boot \
+        --bootloader-id=btw >/dev/null 2>&1 || echo "  (Couldn't add btw to the PC's boot menu; it starts from the disk anyway.)"
+fi
+arch-chroot "$mnt" grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+
+sync
+cleanup
+trap - ERR
+say "btw is installed on $disk." "" "Take out the USB stick, then restart. Log in as btw with your password."
+read -rp $'\n  Restart now? [y/N] ' r
+[[ $r == [yY]* ]] && systemctl reboot
+exit 0

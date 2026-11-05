@@ -1,0 +1,17 @@
+# remove from airootfs!
+# Removes the pacman hooks that are only for building the ISO, so they don't
+# run again on the live system or on a PC it installs (FS#49347).
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Removing the hooks only the ISO build needs...
+When = PostTransaction
+Depends = sh
+Depends = coreutils
+Depends = grep
+Exec = /bin/sh -c "rm -- $(grep -Frl 'remove from airootfs' /etc/pacman.d/hooks/)"

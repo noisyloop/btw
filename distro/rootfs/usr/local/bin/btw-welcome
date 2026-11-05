@@ -15,5 +15,10 @@ if [ -e /var/lib/btw/choose-password ] && [ -x /usr/local/lib/btw/set-password ]
     done
     clear
 fi
+# The live USB (the PC ISO): say how to install it and get online.
+if [ -d /run/archiso ]; then
+    printf '\n  This is btw from the USB stick: try it out, nothing is saved.\n'
+    printf '  Install btw (app menu) puts it on this PC. Wi-Fi (app menu) gets you online.\n\n'
+fi
 command -v fastfetch >/dev/null && fastfetch -c /usr/share/btw/config/fastfetch/config.jsonc
 exec "${SHELL:-bash}"

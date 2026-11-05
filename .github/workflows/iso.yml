@@ -1,0 +1,39 @@
+name: PC ISO
+
+# btw for PCs (x86-64): a live USB that installs itself. Run it by hand from
+# the Actions tab, or as part of Build (which releases it with the rest).
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  iso:
+    name: PC ISO (x86-64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the ISO in Arch Linux (archiso)
+        run: |
+          docker run --rm --privileged -v "$PWD:/work" archlinux:latest /work/distro/iso/build-iso.sh
+          sudo chown -R "$(id -u)" out
+          ls -lh out
+      # Uploaded before the test so a failing ISO can still be tried.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btw-iso
+          path: |
+            out/btw-*-x86_64.iso
+            out/btw-*-x86_64.iso.sha256
+          compression-level: 0
+      - name: Boot it, install it to a disk, boot that (QEMU)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 ovmf mtools e2fsprogs imagemagick >/dev/null
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+          scripts/iso-test.py out/btw-*-x86_64.iso iso-test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: btw-iso-test
+          path: iso-test
