@@ -133,6 +133,10 @@ def main():
         firewall = as_root(b"nft list chain inet btw input | grep -q \"policy drop\"", b"FIREWALL")
         print(f"\n== firewall on: {firewall}", flush=True)
         if not firewall:
+            # Say why: the service's state and log, and what nft has loaded.
+            console.sendall(b"systemctl status nftables --no-pager -l; journalctl -b -u nftables --no-pager | tail -n 20; "
+                            b"echo %s | sudo -S -p '' nft list ruleset | head -n 20; echo WHY-DONE\n" % PASSWORD)
+            expect(console, qemu, rb"WHY-DONE\s", 30)
             fail("the firewall isn't loaded")
         console.sendall(b"echo SSHD-$(systemctl is-active sshd)\n")
         sshd = expect(console, qemu, rb"SSHD-(\w+)", 30).group(1)

@@ -35,15 +35,19 @@ clear
 say "Install btw" "" "This puts btw on a disk of this PC. The disk you choose is erased."
 
 # --- which disk ------------------------------------------------------------------
-# Not the USB btw is running from.
+# Not the USB btw is running from, and nothing too small to hold btw (which
+# also leaves out floppy drives, card readers without a card, and the like).
+min_gib=8
 usb=$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null || true)
 usb_disk=
 [[ -n $usb ]] && usb_disk=/dev/$(lsblk -no PKNAME "$usb" 2>/dev/null | head -n1)
 disks=()
-while read -r name type ro; do
-    [[ $type == disk && $ro == 0 && $name != "$usb_disk" && $name != /dev/zram* ]] && disks+=("$name")
-done < <(lsblk -dnpo NAME,TYPE,RO)
-((${#disks[@]})) || die "No disk to install on was found (the USB stick itself doesn't count)."
+while read -r name type ro size; do
+    [[ $type == disk && $ro == 0 && $name != "$usb_disk" && $name != /dev/zram* ]] || continue
+    ((size >= min_gib * 1024 * 1024 * 1024)) && disks+=("$name")
+done < <(lsblk -dnbpo NAME,TYPE,RO,SIZE)
+((${#disks[@]})) || die "No disk to install on was found: it needs $min_gib GB or more, and the USB stick" \
+    "btw is running from doesn't count."
 
 say "Disks:"
 for i in "${!disks[@]}"; do
