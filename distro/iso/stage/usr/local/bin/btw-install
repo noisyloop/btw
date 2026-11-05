@@ -114,7 +114,7 @@ cp "$mnt/usr/lib/modules/$kver/vmlinuz" "$mnt/boot/vmlinuz-linux"
 
 # Only for the live USB: its initramfs, sudo without a password, logging in
 # by itself, keeping the PC's partitions unmounted, and the installer itself.
-rm -f "$mnt/etc/mkinitcpio.conf.d/archiso.conf" "$mnt/etc/sudoers.d/btw-live" \
+rm -f "$mnt/etc/mkinitcpio.conf.d/archiso.conf" "$mnt/etc/sudoers.d/zz-btw-live" \
     "$mnt/usr/local/bin/btw-install" "$mnt/usr/share/applications/btw-install.desktop" \
     "$mnt/etc/systemd/system-generators/systemd-gpt-auto-generator"
 rm -rf "$mnt/etc/systemd/system/getty@tty1.service.d"

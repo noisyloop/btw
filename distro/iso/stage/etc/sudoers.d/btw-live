@@ -1,3 +1,0 @@
-# Only on the live USB, which has no passwords: btw can sudo without one, so
-# "Install btw" can run. Installing removes this file.
-btw ALL=(ALL:ALL) NOPASSWD: ALL

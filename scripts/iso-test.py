@@ -201,7 +201,7 @@ if len(parts) == 3:
     check("UUID=" in cat("/etc/fstab"), "fstab mounts by UUID")
     check(re.search(r"^btw:\$", cat("/etc/shadow"), re.M) is not None, "btw has a password")
     check("Europe/Berlin" in debugfs(DISK, root, "stat /etc/localtime"), "time zone set")
-    check(not has("/etc/sudoers.d/btw-live"), "no live sudo-without-password")
+    check(not has("/etc/sudoers.d/zz-btw-live"), "no live sudo-without-password")
     check(not has("/etc/systemd/system/getty@tty1.service.d/autologin.conf"), "no automatic login")
     check(not has("/usr/local/bin/btw-install"), "installer not left behind")
     check(has("/usr/local/bin/btw-session") and has("/usr/share/btw/shell/shell.qml"), "btw's files are there")
