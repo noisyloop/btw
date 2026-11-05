@@ -111,9 +111,11 @@ def main():
         console.sendall(PASSWORD + b"\n")
         expect(console, qemu, rb"Retype new password:", 30)
         console.sendall(PASSWORD + b"\n")
-        # passwd flushes the terminal's input when it's done, so anything typed
-        # before it says so is thrown away: wait for it first.
+        # sudo runs passwd in a terminal of its own, and anything typed before
+        # sudo exits goes to that terminal and is lost: wait for the shell's
+        # prompt to come back first.
         expect(console, qemu, rb"password updated successfully", 30)
+        expect(console, qemu, rb"\$ ", 30)
         console.sendall(b"echo MARKER-$(test -e /var/lib/btw/choose-password && echo left || echo gone)\n")
         marker = expect(console, qemu, rb"MARKER-(left|gone)", 60).group(1)
         print(f"\n== first password set: {marker == b'gone'}", flush=True)
