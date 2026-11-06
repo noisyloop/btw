@@ -66,9 +66,12 @@ jobs:
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
           scripts/boot-test.py out/btw-factory.img 16
 
+  iso:
+    uses: ./.github/workflows/iso.yml
+
   release:
     name: Release
-    needs: [macos, image]
+    needs: [macos, image, iso]
     # Releases come from main only; runs on other branches just build and test.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -90,5 +93,5 @@ jobs:
             echo "v$VERSION is already released; nothing to publish."
             exit 0
           fi
-          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz \
+          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz dist/btw-*-x86_64.iso* \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "btw $VERSION" --generate-notes --latest

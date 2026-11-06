@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Wi-Fi
+Comment=Connect to a Wi-Fi network
+Exec=foot -T Wi-Fi -e nmtui connect
+Icon=network-wireless
+Categories=Settings;Network;
+Keywords=wifi;wlan;network;internet;wireless;
