@@ -1,7 +1,7 @@
 # Builder image: Arch Linux ARM (aarch64) with the tools to pacstrap a rootfs
 # and assemble a disk image without loop devices. Build it for linux/arm64:
 # native on Apple silicon and arm64 runners, elsewhere via qemu-user binfmt.
-FROM alpine:3.20 AS fetch
+FROM alpine:3.24 AS fetch
 RUN apk add --no-cache curl gnupg libarchive-tools
 # os.archlinuxarm.org redirects to a mirror and has no valid TLS certificate,
 # so the tarball comes over plain HTTP and is checked against the signature
