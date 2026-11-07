@@ -281,9 +281,9 @@ sudo dd if=btw-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 or use [Fedora Media Writer](https://github.com/FedoraQt/MediaWriter) or
 [balenaEtcher](https://etcher.balena.io) on any system. Boot from it and you're in
-the btw desktop. To install btw to a disk, run `sudo btw-install` in the welcome
-terminal: it asks which disk (erasing it), then a user name and a password. Secure
-Boot has to be off for now.
+the btw desktop. To install btw to a disk, open **Install btw** from the app launcher
+(or run `sudo btw-install` in a terminal): it asks which disk to use (it's erased),
+a password for the `btw` user and your time zone. Secure Boot has to be off for now.
 
 Each release's ISO is boot-tested in QEMU first (BIOS and UEFI live boots, then an
 install to a blank disk and a boot from it). It hasn't been tried on much real
