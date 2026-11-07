@@ -1,0 +1,86 @@
+name: Release from runs
+
+# Publishes a release from files that earlier runs already built and tested,
+# without building anything again. Use it when everything has passed already,
+# e.g. a Build run whose release step was skipped, or an ISO run plus a Build
+# run. Run it by hand from the Actions tab and give it the run numbers (from
+# the run's URL: .../actions/runs/<number>).
+#
+# Each run must have succeeded and be from a commit that's on main. Between
+# them they must have btw-macos, btw-factory and btw-iso; if two runs have the
+# same one, the later run's wins. The version comes from app/Info.plist on
+# main, as with Build. GitHub keeps run files for 90 days, so older runs can't
+# be used: run Build again then.
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Run numbers, separated by spaces"
+        required: true
+      dry_run:
+        description: "Only check and download, don't publish"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check the runs and download their files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNS: ${{ inputs.runs }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist notes
+          : >notes/from.md
+          # Oldest run first, so a later run's file replaces an earlier one.
+          ids=$(for id in $RUNS; do
+            [[ $id =~ ^[0-9]+$ ]] || { echo "::error::'$id' isn't a run number"; exit 1; }
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '"\(.created_at) \(.id)"'
+          done | sort | cut -d' ' -f2)
+          for id in $ids; do
+            read -r conclusion sha name < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" \
+              --jq '"\(.conclusion) \(.head_sha) \(.name)"')
+            [[ $conclusion == success ]] || { echo "::error::run $id is '$conclusion', not success"; exit 1; }
+            git merge-base --is-ancestor "$sha" HEAD \
+              || { echo "::error::run $id is from ${sha:0:7}, which isn't on main"; exit 1; }
+            for a in btw-macos btw-factory btw-iso; do
+              if gh run download "$id" --repo "$GITHUB_REPOSITORY" -n "$a" -D "dl/$id/$a" 2>/dev/null; then
+                rm -rf "dist/$a"; mv "dl/$id/$a" "dist/$a"
+                sed -i "/^- $a /d" notes/from.md
+                echo "- $a from [$name run $id](https://github.com/$GITHUB_REPOSITORY/actions/runs/$id) (${sha:0:7})" >>notes/from.md
+              fi
+            done
+          done
+          for f in btw-macos/btw-macos.dmg btw-factory/btw-factory.tar.gz btw-iso/btw-x86_64.iso btw-iso/btw-x86_64.iso.sha256; do
+            [[ -f dist/$f ]] || { echo "::error::none of the runs has $f"; exit 1; }
+          done
+          (cd dist/btw-iso && sha256sum -c btw-x86_64.iso.sha256)
+          ls -lR dist
+          cat notes/from.md
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -A1 CFBundleShortVersionString app/Info.plist | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::v$VERSION is already released; bump CFBundleShortVersionString in app/Info.plist first."
+            exit 1
+          fi
+          { echo "Files, built and tested by:"; echo; cat notes/from.md; } >notes/notes.md
+          gh release create "v$VERSION" dist/btw-macos/btw-macos.dmg dist/btw-factory/btw-factory.tar.gz \
+            dist/btw-iso/btw-x86_64.iso dist/btw-iso/btw-x86_64.iso.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$(git rev-parse HEAD)" --title "btw $VERSION" \
+            --notes-file notes/notes.md --generate-notes --latest
