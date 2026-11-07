@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds out/btw-<version>-x86_64.iso: btw for PCs, as a live USB that boots
+# Builds out/btw-x86_64.iso: btw for PCs, as a live USB that boots
 # on BIOS and UEFI (real PCs and VMs alike) and can install itself to a disk
 # with "Install btw" (usr/local/bin/btw-install).
 #
@@ -129,7 +129,7 @@ EOF
 mkdir -p "$out"
 mkarchiso -v -r -w "$work/mkarchiso" -o "$work/out" "$profile"
 built=("$work/out"/btw-*.iso)
-name="btw-$version-x86_64.iso"
+name="btw-x86_64.iso"   # no version in it, so releases/latest/download/btw-x86_64.iso always works
 mv "${built[0]}" "$out/$name"
 (cd "$out" && sha256sum "$name" >"$name.sha256")
 echo "built $out/$name ($(du -h "$out/$name" | cut -f1))"

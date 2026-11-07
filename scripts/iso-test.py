@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests the btw PC ISO in QEMU (x86-64, KVM when there is one).
 
-  scripts/iso-test.py <btw-...-x86_64.iso> <screenshot dir>
+  scripts/iso-test.py <btw-x86_64.iso> <screenshot dir>
 
 1. Boots the ISO through BIOS and checks the live desktop comes up.
 2. Boots it through UEFI with a blank disk, types "sudo btw-install" into

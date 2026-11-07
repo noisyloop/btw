@@ -10,7 +10,7 @@
 <p align="center"><b>A fractal-themed Linux desktop you can try on a Mac, on Windows, or on your Arch Linux.</b><br>
 A native macOS launcher on Apple silicon, one PowerShell command on Windows, one command on Arch and Omarchy.</p>
 
-<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · <b>PC ISO</b> (under construction) · <a href="LAB.md"><b>Lab</b></a> · free and open source</p>
+<p align="center"><a href="https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg"><b>Download for Mac</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-factory.tar.gz"><b>btw disk image</b></a> · <a href="#try-btw-on-windows"><b>Windows</b></a> · <a href="#try-btw-on-your-linux"><b>Linux</b></a> · <a href="https://github.com/noisyloop/btw/releases/latest/download/btw-x86_64.iso"><b>PC ISO</b></a> · <a href="LAB.md"><b>Lab</b></a> · free and open source</p>
 
 <p align="center"><img src="docs/screenshots/desktop.png" alt="The btw desktop: a terminal running fastfetch next to the Fractals app, over a live 3D fractal wallpaper" width="860"></p>
 
@@ -266,6 +266,29 @@ administrator's OK), sets up Arch Linux and btw, and opens btw when it's done. A
 open **btw** from the Start menu. See [windows/README.md](windows/README.md) for what it
 does, the keys, updating and removing.
 
+## Try btw on a PC
+
+[**btw-x86_64.iso**](https://github.com/noisyloop/btw/releases/latest/download/btw-x86_64.iso)
+(about 1.7 GB, [checksum](https://github.com/noisyloop/btw/releases/latest/download/btw-x86_64.iso.sha256))
+is a live USB for x86-64 PCs. It boots on BIOS and UEFI, on real PCs and in VMs
+(VirtualBox, QEMU, VMware), and doesn't touch the PC's disk until you ask it to.
+Write it to a USB stick, for example on Linux (replace `/dev/sdX` with the stick;
+everything on it is erased):
+
+```sh
+sudo dd if=btw-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+or use [Fedora Media Writer](https://github.com/FedoraQt/MediaWriter) or
+[balenaEtcher](https://etcher.balena.io) on any system. Boot from it and you're in
+the btw desktop. To install btw to a disk, run `sudo btw-install` in the welcome
+terminal: it asks which disk (erasing it), then a user name and a password. Secure
+Boot has to be off for now.
+
+Each release's ISO is boot-tested in QEMU first (BIOS and UEFI live boots, then an
+install to a blank disk and a boot from it). It hasn't been tried on much real
+hardware yet, so if something doesn't work on your PC, please open an issue.
+
 ## Requirements
 
 - An Apple silicon Mac (M1 or newer) on macOS 13 Ventura or newer
@@ -411,8 +434,11 @@ CI doesn't run on pushes or pull requests. The GitHub Actions workflow
   `btw check` passes.
 - **Factory disk:** builds `btw-factory.img` on an arm64 Linux runner and
   boot-tests it in QEMU.
+- **PC ISO:** builds `btw-x86_64.iso` with archiso in an Arch Linux container
+  (`.github/workflows/iso.yml`, which can also run on its own) and tests it in
+  QEMU: live boot on BIOS and UEFI, an install to a blank disk, and a boot of that.
 - **Release:** bump `CFBundleShortVersionString` in `app/Info.plist`, then run
-  the workflow on main. It publishes `v<version>` with both files, and the
+  the workflow on main. It publishes `v<version>` with all three, and the
   download links above point to it.
 
 ## Package as an app
