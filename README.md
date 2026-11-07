@@ -440,6 +440,10 @@ CI doesn't run on pushes or pull requests. The GitHub Actions workflow
 - **Release:** bump `CFBundleShortVersionString` in `app/Info.plist`, then run
   the workflow on main. It publishes `v<version>` with all three, and the
   download links above point to it.
+- **Release from runs** (`.github/workflows/release.yml`): publishes a release
+  from runs that already passed, without building again. Give it the run
+  numbers (e.g. one Build run, or a Build run plus an ISO run); each has to have
+  succeeded on a commit that's on main. Tick "dry run" to only check them.
 
 ## Package as an app
 
