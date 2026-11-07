@@ -23,15 +23,15 @@ jobs:
         with:
           name: btw-iso
           path: |
-            out/btw-*-x86_64.iso
-            out/btw-*-x86_64.iso.sha256
+            out/btw-x86_64.iso
+            out/btw-x86_64.iso.sha256
           compression-level: 0
       - name: Boot it, install it to a disk, boot that (QEMU)
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq qemu-system-x86 ovmf mtools e2fsprogs imagemagick >/dev/null
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
-          scripts/iso-test.py out/btw-*-x86_64.iso iso-test
+          scripts/iso-test.py out/btw-x86_64.iso iso-test
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -93,5 +93,5 @@ jobs:
             echo "v$VERSION is already released; nothing to publish."
             exit 0
           fi
-          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz dist/btw-*-x86_64.iso* \
+          gh release create "v$VERSION" dist/btw-macos.dmg dist/btw-factory.tar.gz dist/btw-x86_64.iso dist/btw-x86_64.iso.sha256 \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "btw $VERSION" --generate-notes --latest

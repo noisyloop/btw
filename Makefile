@@ -27,13 +27,13 @@ image:
 	docker build --platform linux/arm64 -t btw-builder distro
 	docker run --rm --privileged --platform linux/arm64 -v "$(CURDIR)":/work btw-builder /work/distro/build.sh
 
-# btw for PCs: the x86-64 live/install ISO, built with archiso in Docker -> out/btw-<version>-x86_64.iso.
+# btw for PCs: the x86-64 live/install ISO, built with archiso in Docker -> out/btw-x86_64.iso.
 iso:
 	docker run --rm --privileged -v "$(CURDIR)":/work archlinux:latest /work/distro/iso/build-iso.sh
 
 # Linux + QEMU: boot the ISO, install it to a blank disk, boot that (screenshots in iso-test/).
 iso-test:
-	scripts/iso-test.py out/btw-*-x86_64.iso iso-test
+	scripts/iso-test.py out/btw-x86_64.iso iso-test
 
 # Linux + QEMU: boot the image and check it logs in, grows its root and powers off.
 boot-test:
