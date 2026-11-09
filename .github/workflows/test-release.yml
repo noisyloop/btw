@@ -43,6 +43,9 @@ jobs:
           echo "RUN=$run" >>"$GITHUB_ENV"
           gh run download "$run" --repo "$GITHUB_REPOSITORY" -n btw-iso -D dist
           (cd dist && sha256sum -c btw-x86_64.iso.sha256)
+          # The test's screenshots, to look at before trying the ISO.
+          gh run download "$run" --repo "$GITHUB_REPOSITORY" -n btw-iso-test -D shots
+          (cd shots && zip -q -r ../dist/btw-iso-test-screenshots.zip .)
           ls -l dist
       - name: Publish as a pre-release
         env:
@@ -63,5 +66,6 @@ jobs:
             echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/btw-x86_64.iso"
           } >notes.md
           gh release create "$tag" dist/btw-x86_64.iso dist/btw-x86_64.iso.sha256 \
+            dist/btw-iso-test-screenshots.zip \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "btw test build: $tag" --notes-file notes.md
