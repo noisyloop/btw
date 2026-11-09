@@ -7,11 +7,15 @@ name: Test release
 #
 # Start it by pushing a tag that starts with test-, on a commit of the branch:
 #   git tag test-pacman-fix && git push origin test-pacman-fix
+# or, where only the branch can be pushed, by putting the tag's name in
+# .github/test-release on the branch: the workflow then makes the tag.
 # It takes the newest successful PC ISO run of that commit or one before it.
 # Delete the pre-release (and its tag) once it's no longer needed.
 on:
   push:
     tags: ["test-*"]
+    branches-ignore: [main]
+    paths: [.github/test-release]
 
 permissions:
   contents: write
@@ -45,7 +49,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          tag=${GITHUB_REF_NAME}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            tag=$GITHUB_REF_NAME
+          else
+            tag=$(tr -d '[:space:]' <.github/test-release)
+          fi
+          [[ $tag =~ ^test-[A-Za-z0-9._-]+$ ]] || { echo "::error::'$tag' isn't a test-* tag name"; exit 1; }
           {
             echo "A test build of the PC ISO, not a release: try it before it's in one."
             echo
@@ -54,5 +63,5 @@ jobs:
             echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/btw-x86_64.iso"
           } >notes.md
           gh release create "$tag" dist/btw-x86_64.iso dist/btw-x86_64.iso.sha256 \
-            --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease --latest=false \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "btw test build: $tag" --notes-file notes.md
