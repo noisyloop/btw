@@ -2,7 +2,7 @@
 Type=Application
 Name=Install btw
 Comment=Install btw from this USB onto this PC's disk
-Exec=foot -T "Install btw" -e sudo /usr/local/bin/btw-install
+Exec=foot -T "Install btw" -e /usr/local/bin/btw-install
 Icon=btw
 Categories=System;
 Keywords=install;installer;disk;

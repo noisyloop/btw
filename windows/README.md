@@ -25,7 +25,8 @@ It asks no questions. It:
    administrator's OK; choose **Yes**). If Windows has to restart for WSL, the installer
    says so and carries on by itself after you log back in,
 2. installs **Arch Linux** from the official WSL image,
-3. sets up a Linux user with your Windows user name, sudo and systemd,
+3. sets up a Linux user with your Windows user name, sudo (with a password you choose
+   when btw first opens) and systemd,
 4. installs btw with its normal installer, the same one used on Arch and Omarchy, with its
    apps (Fractals, Soundgineer),
 5. adds a **btw** shortcut, with the triangle icon, to the Start menu, checks that btw can
@@ -34,9 +35,13 @@ It asks no questions. It:
 The first run takes several minutes, mostly downloading Arch and the packages; each step
 shows its progress. Everything is logged to `%LOCALAPPDATA%\btw\install.log`.
 
-The Linux user has no password, and sudo doesn't ask for one. Under WSL, any program you
-run on Windows can already be root in Linux (`wsl -u root`), so a password there would
-protect nothing; it would only be one more thing to type.
+The Linux user starts with no password. The first time btw opens, its terminal asks you
+to choose one, and `sudo` asks for it from then on; until you do, nothing can use sudo.
+The installer itself uses sudo without a password while it runs and takes that away
+before it finishes, also when it fails. Running the installer again on an older btw,
+where sudo never asked, does the same. (This keeps programs inside Linux from becoming
+root by themselves. It doesn't change what Windows can do: any program you run on Windows
+can still be root in WSL with `wsl -u root`.)
 
 ## Use
 

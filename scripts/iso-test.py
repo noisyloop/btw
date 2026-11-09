@@ -4,8 +4,9 @@
   scripts/iso-test.py <btw-x86_64.iso> <screenshot dir>
 
 1. Boots the ISO through BIOS and checks the live desktop comes up.
-2. Boots it through UEFI with a blank disk, types "sudo btw-install" into
-   the desktop's welcome terminal and answers its questions.
+2. Boots it through UEFI with a blank disk, chooses a password in the
+   desktop's welcome terminal (the live USB has none), then types
+   "sudo btw-install" there and answers its questions.
 3. Checks what landed on the disk: GRUB for BIOS and UEFI, an fstab, a
    password for btw, and none of the live USB's leftovers.
 4. Boots the installed disk, through UEFI and through BIOS.
@@ -175,10 +176,13 @@ print("-- install, UEFI", flush=True)
 subprocess.run(["truncate", "-s", "12G", DISK], check=True)
 vm = VM("install", uefi=True, cdrom=ISO, disk=DISK)
 vm.wait(90); vm.shot("desktop")
-vm.type("sudo btw-install\n"); vm.wait(8); vm.shot("disks")
+# The live USB has no password: the welcome terminal asks for one first, and
+# sudo then asks for it. The installed btw gets the same one.
+vm.type(PASSWORD + "\n"); vm.wait(3)
+vm.type(PASSWORD + "\n"); vm.wait(6); vm.shot("password-chosen")
+vm.type("sudo btw-install\n"); vm.wait(4)
+vm.type(PASSWORD + "\n"); vm.wait(8); vm.shot("disks")
 vm.type("1\n"); vm.wait(3)
-vm.type(PASSWORD + "\n"); vm.wait(1)
-vm.type(PASSWORD + "\n"); vm.wait(2)
 vm.type("Europe/Berlin\n"); vm.wait(2); vm.shot("confirm")
 vm.type("erase\n")
 # Copying: wait for "Restart now?", checking the screen now and then.
@@ -202,6 +206,11 @@ if len(parts) == 3:
     check(re.search(r"^btw:\$", cat("/etc/shadow"), re.M) is not None, "btw has a password")
     check("Europe/Berlin" in debugfs(DISK, root, "stat /etc/localtime"), "time zone set")
     check(not has("/etc/sudoers.d/zz-btw-live"), "no live sudo-without-password")
+    check(not has("/var/lib/btw/choose-password"), "no first-password prompt left")
+    sudoers = "".join(cat(f"/etc/sudoers.d/{f}") for f in ("wheel",))
+    nopasswd = [l for l in sudoers.splitlines() if "NOPASSWD" in l and not l.lstrip().startswith("#")]
+    check(nopasswd == ['btw ALL=(root) NOPASSWD: /usr/local/lib/btw/set-password ""'],
+          "sudo asks for the password (only set-password is allowed without)")
     check(not has("/etc/systemd/system/getty@tty1.service.d/autologin.conf"), "no automatic login")
     check(not has("/usr/local/bin/btw-install"), "installer not left behind")
     check(has("/usr/local/bin/btw-session") and has("/usr/share/btw/shell/shell.qml"), "btw's files are there")

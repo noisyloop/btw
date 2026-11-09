@@ -38,8 +38,10 @@ Each experiment has the same five parts:
    own config dir, not `~/.config`; claim a D-Bus name only when it's yours to claim.
 6. **Least privilege is precise.** A sudo rule names one command *and* its arguments.
    An entitlement grants one capability.
-7. **A password only protects a boundary.** Where there's no boundary (WSL's root is one
-   command away for the Windows user), a password is theatre; say so and skip it.
+7. **A password only protects a boundary; know which one.** In WSL, root is one command
+   away for the Windows user, so sudo's password doesn't protect Linux from Windows. It
+   does stop a program running inside Linux from becoming root by itself, so btw asks
+   for one everywhere: the Mac VM, the live USB and WSL.
 8. **The sandbox is the boundary for root.** A firewall in the VM contains programs and
    users; root can turn it off, so the VM itself is what contains root.
 9. **Be loud when something fails.** A silent failure looks like success or a crash,
@@ -237,8 +239,11 @@ The trade-offs we know about and chose for now. Revisit them before each release
 - **The dmg is ad-hoc signed, not notarized.** The first open needs right-click → Open.
 - **Clipboard sharing is on** between the Mac and the VM (`VMConfiguration.swift`), and
   `--share` folders are writable. Both are opt-in by what you run in the VM.
-- **WSL gets sudo without a password,** on purpose: for that Windows user, root in WSL is
-  already one command away (`wsl -u root`), so a password would protect nothing.
+- **WSL's sudo password doesn't protect Linux from Windows:** for that Windows user, root
+  in WSL is one command away (`wsl -u root`). It's there so a program inside Linux can't
+  become root by itself. (Earlier versions had sudo without a password there.)
+- **The live USB logs in by itself,** as it has to: no password exists until you choose
+  one in its welcome terminal. Until then nothing can sudo, and SSH is off.
 - **VMs made from an older disk** still have the password `btw` and SSH on. The fix is in
   the README (`passwd`, then `sudo systemctl disable --now sshd`).
 - **Root in the VM can turn the firewall off.** The VM boundary is what contains root.

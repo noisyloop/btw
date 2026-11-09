@@ -285,8 +285,14 @@ sudo dd if=btw-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 or use [Fedora Media Writer](https://github.com/FedoraQt/MediaWriter) or
 [balenaEtcher](https://etcher.balena.io) on any system. Boot from it and you're in
 the btw desktop. To install btw to a disk, open **Install btw** from the app launcher
-(or run `sudo btw-install` in a terminal): it asks which disk to use (it's erased),
-a password for the `btw` user and your time zone. Secure Boot has to be off for now.
+(or run `btw-install` in a terminal): it asks which disk to use (it's erased) and your
+time zone. Secure Boot has to be off for now.
+
+The live USB logs in by itself as `btw`, since no password exists yet, and its welcome
+terminal asks you to choose one first: `sudo` asks for it, and the installed btw gets
+the same one. Nothing ships with a password everyone knows, and nothing can use sudo
+before you've chosen yours. The installed btw doesn't log in by itself: it asks for
+that password.
 
 Once it's installed, btw is a normal Arch Linux system: `sudo pacman -S <package>`
 installs anything from Arch's repositories, and `btw-update` in a terminal keeps it
