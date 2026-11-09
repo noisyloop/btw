@@ -49,11 +49,11 @@ def ovmf():
 
 
 class VM:
-    def __init__(self, name, uefi, cdrom=None, disk=None):
+    def __init__(self, name, uefi, cdrom=None, disk=None, vga="virtio"):
         self.name = name
         self.mon = os.path.join(WORK, f"{name}.mon")
         args = ["qemu-system-x86_64", "-m", "3072", "-smp", "2",
-                "-vga", "virtio", "-display", "none",
+                "-vga", vga, "-display", "none",
                 "-monitor", f"unix:{self.mon},server,nowait",
                 "-nic", "user,model=virtio-net-pci",
                 "-device", "qemu-xhci", "-device", "usb-tablet"]
@@ -106,7 +106,7 @@ class VM:
         print(f"   screenshot: {label}", flush=True)
 
     KEYS = {" ": "spc", "\n": "ret", "-": "minus", "/": "slash", ".": "dot", "_": "shift-minus",
-            ":": "shift-semicolon", "=": "equal"}
+            ":": "shift-semicolon", "=": "equal", "~": "shift-grave_accent", ";": "semicolon"}
 
     def type(self, text):
         for ch in text:
@@ -169,6 +169,17 @@ print("-- live, BIOS", flush=True)
 vm = VM("live-bios", uefi=False, cdrom=ISO)
 vm.wait(20); vm.shot("boot-menu")
 vm.wait(70); vm.shot("desktop")
+vm.stop()
+
+# 1b. The live desktop on the graphics card VirtualBox and VMware give a VM
+# (VMSVGA), which has no 3D here: the desktop has to come up all the same.
+# The second screenshot shows what the session logged.
+print("-- live, BIOS, VMSVGA graphics", flush=True)
+vm = VM("live-vmsvga", uefi=False, cdrom=ISO, vga="vmware")
+vm.wait(90); vm.shot("desktop")
+vm.type(PASSWORD + "\n"); vm.wait(3)
+vm.type(PASSWORD + "\n"); vm.wait(6)
+vm.type("ls /dev/dri; tail -n 15 ~/.local/state/sway.log\n"); vm.wait(5); vm.shot("session-log")
 vm.stop()
 
 # 2. Install, through UEFI.

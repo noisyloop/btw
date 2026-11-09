@@ -224,9 +224,12 @@ pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
 pacman -Syu --noconfirm --needed sudo git curl
 id -u $User >/dev/null 2>&1 || useradd -m -G wheel -s /bin/bash $User
-# Named to sort after 10-btw: sudo goes by the last rule that matches.
-echo '$User ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/zz-btw-install
+# Named to sort after 10-btw: sudo goes by the last rule that matches. The
+# rule also ends by itself after two hours, in case this installer is closed
+# before it can take it away.
+echo "$User ALL=(ALL:ALL) NOTAFTER=`$(date -u -d '+2 hours' +%Y%m%d%H%M%SZ) NOPASSWD: ALL" > /etc/sudoers.d/zz-btw-install
 chmod 440 /etc/sudoers.d/zz-btw-install
+visudo -cf /etc/sudoers.d/zz-btw-install >/dev/null
 # Log in as $User by default, and run systemd (btw's session uses it).
 touch /etc/wsl.conf
 grep -q '^default=' /etc/wsl.conf || printf '\n[user]\ndefault=$User\n' >> /etc/wsl.conf

@@ -38,7 +38,7 @@ shows its progress. Everything is logged to `%LOCALAPPDATA%\btw\install.log`.
 The Linux user starts with no password. The first time btw opens, its terminal asks you
 to choose one, and `sudo` asks for it from then on; until you do, nothing can use sudo.
 The installer itself uses sudo without a password while it runs and takes that away
-before it finishes, also when it fails. Running the installer again on an older btw,
+before it finishes, also when it fails (and the rule ends by itself after two hours). Running the installer again on an older btw,
 where sudo never asked, does the same. (This keeps programs inside Linux from becoming
 root by themselves. It doesn't change what Windows can do: any program you run on Windows
 can still be root in WSL with `wsl -u root`.)

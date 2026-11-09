@@ -99,7 +99,8 @@ if [[ $whole_os == yes ]]; then
     # 2. Arch's news since the last update (Arch Linux ARM has none in this form).
     if [[ $distro_id == arch ]]; then
         since=$(cat "$stamp" 2>/dev/null || echo $(($(date +%s) - 30 * 86400)))
-        news=$(curl -fsSL -m 15 https://archlinux.org/feeds/news/ 2>/dev/null | tr '\n\r' '  ' |
+        news=$(curl -fsSL -m 15 https://archlinux.org/feeds/news/ 2>/dev/null |
+            tr '\n\r\t' '   ' | tr -d '\000-\037\177' | # no control characters reach the terminal
             awk 'BEGIN { RS = "<item>" } NR > 1 {
                 t = $0; sub(/.*<title>/, "", t); sub(/<\/title>.*/, "", t)
                 d = $0; sub(/.*<pubDate>/, "", d); sub(/<\/pubDate>.*/, "", d)
