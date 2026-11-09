@@ -212,7 +212,6 @@ if len(parts) == 3:
     check(has("/etc/systemd/system/multi-user.target.wants/btw-pacman-init.service"), "pacman keys made on first start")
     check(not has("/etc/pacman.d/gnupg/trustdb.gpg"), "no pacman keys shipped")
     check(has("/usr/bin/git") and has("/usr/local/lib/btw/whole-os"), "btw-update can update everything")
-    check(has("/usr/bin/gnome-boxes"), "GNOME Boxes")
     esp = parts[1]
     esp_img = os.path.join(WORK, "esp.img")
     subprocess.run(["dd", f"if={DISK}", f"of={esp_img}", "bs=512", f"skip={esp['start']}",

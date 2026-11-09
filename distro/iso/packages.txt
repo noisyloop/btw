@@ -24,11 +24,6 @@ e2fsprogs
 git
 pacman-contrib
 
-# GNOME Boxes, for virtual machines: another btw (this ISO), or any other
-# system, in a window. It uses KVM, so the PC needs virtualization turned on
-# in its firmware settings (Intel VT-x or AMD-V).
-gnome-boxes
-
 # Wired and Wi-Fi networking ("Wi-Fi" in the app menu is nmtui).
 networkmanager
 

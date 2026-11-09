@@ -323,10 +323,10 @@ same as the boot test each release goes through.
 4. For the live fractal wallpaper, turn on **3D acceleration** in the box's preferences.
    Without it the desktop still works, with a still picture.
 
-btw comes with Boxes too, so on a PC with btw installed you can run another btw (or any
-other system) in a window. It needs virtualization turned on in the PC's firmware
-(Intel VT-x or AMD-V), and Boxes inside a VM only works if that VM allows nested
-virtualization. On Windows, where Boxes doesn't run, VirtualBox or Hyper-V boot the ISO
+On a PC with btw installed, `sudo pacman -Syu gnome-boxes` adds Boxes, so you can run
+another btw (or any other system) in a window. It needs virtualization turned on in the
+PC's firmware (Intel VT-x or AMD-V), and Boxes inside a VM only works if that VM allows
+nested virtualization. On Windows, where Boxes doesn't run, VirtualBox or Hyper-V boot the ISO
 the same way (with EFI on).
 
 ## Requirements
