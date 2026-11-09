@@ -1,0 +1,58 @@
+name: Test release
+
+# Publishes an ISO that a PC ISO run already built and tested as a pre-release,
+# so it can be downloaded with a plain link (no GitHub sign-in) before it's in
+# a real release. Nothing is built again. It never becomes "latest", so the
+# download links in the README keep pointing at the real release.
+#
+# Start it by pushing a tag that starts with test-, on a commit of the branch:
+#   git tag test-pacman-fix && git push origin test-pacman-fix
+# It takes the newest successful PC ISO run of that commit or one before it.
+# Delete the pre-release (and its tag) once it's no longer needed.
+on:
+  push:
+    tags: ["test-*"]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    name: Publish the tested ISO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find the ISO run and download its ISO
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run=
+          while read -r id sha; do
+            if git merge-base --is-ancestor "$sha" HEAD 2>/dev/null; then run=$id; break; fi
+          done < <(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/iso.yml/runs?status=success&per_page=50" \
+            --jq '.workflow_runs[] | "\(.id) \(.head_sha)"')
+          [[ -n $run ]] || { echo "::error::no successful PC ISO run for this commit or one before it"; exit 1; }
+          echo "RUN=$run" >>"$GITHUB_ENV"
+          gh run download "$run" --repo "$GITHUB_REPOSITORY" -n btw-iso -D dist
+          (cd dist && sha256sum -c btw-x86_64.iso.sha256)
+          ls -l dist
+      - name: Publish as a pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=${GITHUB_REF_NAME}
+          {
+            echo "A test build of the PC ISO, not a release: try it before it's in one."
+            echo
+            echo "Built and tested by [PC ISO run $RUN](https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN)."
+            echo
+            echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/btw-x86_64.iso"
+          } >notes.md
+          gh release create "$tag" dist/btw-x86_64.iso dist/btw-x86_64.iso.sha256 \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease --latest=false \
+            --title "btw test build: $tag" --notes-file notes.md
