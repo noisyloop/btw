@@ -199,6 +199,9 @@ btw-update
 ```
 
 It downloads the newest btw and installs it over the one you have (any new packages too).
+Here, next to your own desktop, it only updates btw; update the rest of your system the
+way you always do. (Where btw is the whole system, on a PC installed from the
+[ISO](#try-btw-on-a-pc), it updates every package too.)
 To try changes before they're merged, give it the branch of a pull request:
 
 ```sh
@@ -263,8 +266,10 @@ irm https://raw.githubusercontent.com/noisyloop/btw/main/windows/install-btw.ps1
 
 It asks no questions: it installs or updates WSL if needed (Windows asks for an
 administrator's OK), sets up Arch Linux and btw, and opens btw when it's done. After that,
-open **btw** from the Start menu. See [windows/README.md](windows/README.md) for what it
-does, the keys, updating and removing.
+open **btw** from the Start menu. The first time it opens, its terminal asks you to
+choose a password; `sudo` asks for it from then on. To update btw, run the same command
+again. See [windows/README.md](windows/README.md) for what it does, the keys, updating
+and removing.
 
 ## Try btw on a PC
 
@@ -282,12 +287,76 @@ sudo dd if=btw-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 or use [Fedora Media Writer](https://github.com/FedoraQt/MediaWriter) or
 [balenaEtcher](https://etcher.balena.io) on any system. Boot from it and you're in
 the btw desktop. To install btw to a disk, open **Install btw** from the app launcher
-(or run `sudo btw-install` in a terminal): it asks which disk to use (it's erased),
-a password for the `btw` user and your time zone. Secure Boot has to be off for now.
+(or run `btw-install` in a terminal): it asks which disk to use (it's erased) and your
+time zone. Secure Boot has to be off for now.
+
+The live USB logs in by itself as `btw`, since no password exists yet, and its welcome
+terminal asks you to choose one first: `sudo` asks for it, and the installed btw gets
+the same one. Nothing ships with a password everyone knows, and nothing can use sudo
+before you've chosen yours. The installed btw doesn't log in by itself: it asks for
+that password.
+
+Once it's installed, btw is a normal Arch Linux system: `sudo pacman -S <package>`
+installs anything from Arch's repositories, and `btw-update` in a terminal keeps it
+up to date. It updates Arch's keyring first, shows Arch's news
+since your last update (it says when an update needs you to do something by hand) and
+asks before it goes on, then updates every package together and then btw itself. At the
+end it lists config files that packages left as `.pacnew` and offers a restart if the
+kernel changed. SSH logins stay off; `ssh` and `scp` work for reaching other machines.
+
+On a PC installed from the 0.3.1 ISO, pacman isn't set up yet (it has no signing keys
+and no download server). The newest `btw-update` fixes that and then updates
+everything, so run it once straight from GitHub:
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/distro/rootfs/usr/local/bin/btw-update)
+```
 
 Each release's ISO is boot-tested in QEMU first (BIOS and UEFI live boots, then an
 install to a blank disk and a boot from it). It hasn't been tried on much real
 hardware yet, so if something doesn't work on your PC, please open an issue.
+
+### Try it in a virtual machine
+
+A virtual machine tries the ISO (or tests a new one) without a USB stick, and without
+touching the PC's own disk. One app per system is enough:
+
+| On | Use |
+|---|---|
+| Linux | [GNOME Boxes](https://apps.gnome.org/Boxes/): QEMU and KVM, the same as the boot test each release goes through |
+| Windows | [VirtualBox](https://www.virtualbox.org) (any edition), or Hyper-V (Pro, Enterprise and Education) |
+| Mac, Intel | VirtualBox or [UTM](https://mac.getutm.app) |
+| Mac, Apple silicon | the [btw Mac app](https://github.com/noisyloop/btw/releases/latest/download/btw-macos.dmg) instead: the ISO is for Intel and AMD processors |
+
+Give the machine 4 GB of memory or more, 2 processors or more and a disk of 12 GB or
+more (8 GB is the least btw installs on; the disk file only grows as it's used). In all
+of them: boot the ISO, choose a password in the welcome terminal, open **Install btw**
+from the app menu, and when it's done remove the ISO from the machine's CD drive before
+restarting, so it starts from its disk. The installed btw asks you to log in as `btw`.
+
+**GNOME Boxes:**
+
+1. Install Boxes (`sudo pacman -S gnome-boxes` on Arch, `flatpak install flathub
+   org.gnome.Boxes` anywhere) and download `btw-x86_64.iso`.
+2. In Boxes: **+**, then **Install from File**, and pick the ISO. If it asks which system
+   it is, choose **Arch Linux**.
+3. Give it 4 GB of memory or more and a disk of 12 GB or more, then **Create**. It boots into the
+   live btw desktop; **Install btw** in the app menu installs it to the box's disk.
+4. For the live fractal wallpaper, turn on **3D acceleration** in the box's preferences.
+   Without it the desktop still works, with a still picture.
+
+On a PC with btw installed, `sudo pacman -Syu gnome-boxes` adds Boxes, so you can run
+another btw (or any other system) in a window. It needs virtualization turned on in the
+PC's firmware (Intel VT-x or AMD-V), and Boxes inside a VM only works if that VM allows
+nested virtualization.
+
+**VirtualBox:** type **Linux**, version **Arch Linux (64-bit)**, and tick **Skip
+Unattended Installation**. Under **System**, turn on **Enable EFI**. Under **Display**,
+use the **VMSVGA** graphics controller with the most video memory; **3D acceleration** is
+for the live wallpaper, and if the desktop glitches with it, turn it off (btw then shows a
+still picture). After installing: **Devices**, **Optical Drives**, **Remove disk**.
+
+**Hyper-V:** a **Generation 2** machine, with **Secure Boot** turned off.
 
 ## Requirements
 

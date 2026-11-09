@@ -1,4 +1,0 @@
-# Only on the live USB, which has no passwords: btw can sudo without one, so
-# "Install btw" can run. Installing removes this file. It's named to sort
-# after wheel, since sudo goes by the last rule that matches.
-btw ALL=(ALL:ALL) NOPASSWD: ALL

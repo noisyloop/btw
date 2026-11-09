@@ -1,28 +1,175 @@
-#!/bin/sh
-# Replaces the installed btw with the newest one from GitHub: fetches it into
-# ~/.local/share/btw/src and runs its install.sh, which removes the old btw's
-# files and installs the new ones (and any new packages).
+#!/usr/bin/env bash
+# Updates btw. Run it in a terminal.
 #
-#   btw-update            the newest btw (main)
-#   btw-update <branch>   a branch, e.g. to try a pull request before it's merged
+#   btw-update              update everything (see below), with btw from main
+#   btw-update <branch>     the same, with btw from a branch, e.g. to try a pull
+#                           request before it's merged (btw-update alone goes back)
+#   btw-update --btw-only   only btw's own files, not the system's packages
 #
-# The Mac VM gets btw from its disk image instead.
-set -eu
+# Where btw is the whole system (the PC ISO, installed or not yet, and the Mac
+# VM), it updates every package first, the careful Arch way:
+#   1. makes sure pacman can work: its signing keys and a download server
+#   2. shows Arch's news since your last update, which says when an update
+#      needs you to do something by hand, and asks before going on
+#   3. updates the keyring first, then everything together (pacman -Syu; never
+#      some packages without the rest, which is what breaks Arch)
+#   4. then btw's own files: fetched into ~/.local/share/btw/src and installed
+#      by its install.sh
+#   5. lists config files that packages left as .pacnew, and offers a restart
+#      if the kernel changed
+# Where btw sits next to another desktop (install.sh on Arch, Omarchy, ...),
+# it only does step 4: the rest of the system is updated the way it always is.
+#
+# A PC installed from an older ISO, where pacman doesn't work yet, can run the
+# newest btw-update straight from GitHub; it fixes pacman first:
+#   bash <(curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/distro/rootfs/usr/local/bin/btw-update)
+set -euo pipefail
 repo="${BTW_REPO:-https://github.com/noisyloop/btw.git}"
 src="${XDG_DATA_HOME:-$HOME/.local/share}/btw/src"
-branch=${1:-main}
+state="${XDG_STATE_HOME:-$HOME/.local/state}/btw"
+stamp="$state/last-update"
+mirror_x86='https://geo.mirror.pkgbuild.com/$repo/os/$arch'
 
-command -v git >/dev/null || { echo "btw-update: git is missing (sudo pacman -S git)" >&2; exit 1; }
-command -v pacman >/dev/null || { echo "btw-update: this needs an Arch-based system" >&2; exit 1; }
+step() { printf '\n\033[1;32m==> %s\033[0m\n' "$*"; }
+note() { printf '    %s\n' "$*"; }
+pause=no
+finish() { if [[ $pause == yes ]]; then read -rp $'\n  Press Enter to close. ' _ || true; fi; }
+die() {
+    printf '\n\033[1;31mbtw-update: %s\033[0m\n' "$*" >&2
+    finish
+    exit 1
+}
+trap 'die "stopped with an error (line $LINENO). Run btw-update again to finish."' ERR
 
-if [ -d "$src/.git" ]; then
-    echo "Fetching btw ($branch)..."
+branch=main
+btw_only=no
+for arg in "$@"; do
+    case $arg in
+    --btw-only) btw_only=yes ;;
+    --pause) pause=yes ;; # keep a terminal window open at the end
+    -h | --help)
+        sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    -*) die "unknown option $arg (try --help)" ;;
+    *) branch=$arg ;;
+    esac
+done
+
+[[ $EUID -ne 0 ]] || die "run this as your normal user; it asks for sudo when it needs it."
+command -v pacman >/dev/null || die "this needs an Arch-based system with pacman."
+[[ ! -d /run/archiso ]] || die "this is the live USB: whatever it updates is gone when it restarts." \
+    "Install btw (app menu) first, then update the installed btw."
+
+# btw is the whole system on the PC ISO and the Mac VM (both have btw's rootfs;
+# btw-password.sh is there on ones from before the marker).
+whole_os=no
+[[ -f /usr/local/lib/btw/whole-os || -f /etc/profile.d/btw-password.sh ]] && whole_os=yes
+[[ $btw_only == yes ]] && whole_os=no
+
+curl -fsI -m 15 https://github.com >/dev/null 2>&1 ||
+    die "no internet. Connect first (Wi-Fi in the app menu), then run btw-update again."
+
+# --- the system's packages ----------------------------------------------------------
+if [[ $whole_os == yes ]]; then
+    # shellcheck disable=SC1091
+    distro_id=$(. /etc/os-release && echo "${ID:-}")
+    step "Updating this PC's packages"
+    sudo -v || die "sudo needs your password to update packages."
+
+    # 1. pacman's signing keys: made on the PC itself, never shipped in the ISO
+    #    (everyone's would be the same). The ISO makes them on first start
+    #    (btw-pacman-init.service); older ones didn't.
+    #    Populating again is harmless, and repairs keys that were half set up.
+    if ! sudo test -s /etc/pacman.d/gnupg/trustdb.gpg; then
+        note "setting up pacman's signing keys (once)"
+        sudo pacman-key --init >/dev/null
+    fi
+    sudo pacman-key --populate >/dev/null 2>&1
+    # ...and somewhere to download from: Arch's own mirror list comes with every
+    # server commented out. Arch's worldwide mirror, if there's none. Edit
+    # /etc/pacman.d/mirrorlist to pick others.
+    if ! grep -Eq '^\s*Server\s*=' /etc/pacman.d/mirrorlist 2>/dev/null; then
+        [[ $distro_id == arch ]] || die "/etc/pacman.d/mirrorlist has no server. Add one, then run this again."
+        note "adding a download server to /etc/pacman.d/mirrorlist"
+        printf '# Added by btw-update: the Arch Linux worldwide mirror. Add or pick others here.\nServer = %s\n' \
+            "$mirror_x86" | sudo tee /etc/pacman.d/mirrorlist >/dev/null
+    fi
+
+    # 2. Arch's news since the last update (Arch Linux ARM has none in this form).
+    if [[ $distro_id == arch ]]; then
+        since=$(cat "$stamp" 2>/dev/null || echo $(($(date +%s) - 30 * 86400)))
+        news=$(curl -fsSL -m 15 https://archlinux.org/feeds/news/ 2>/dev/null |
+            tr '\n\r\t' '   ' | tr -d '\000-\037\177' | # no control characters reach the terminal
+            awk 'BEGIN { RS = "<item>" } NR > 1 {
+                t = $0; sub(/.*<title>/, "", t); sub(/<\/title>.*/, "", t)
+                d = $0; sub(/.*<pubDate>/, "", d); sub(/<\/pubDate>.*/, "", d)
+                l = $0; sub(/.*<link>/, "", l); sub(/<\/link>.*/, "", l)
+                print d "\t" t "\t" l
+            }' | sed -e 's/&amp;/\&/g' -e 's/&lt;/</g' -e 's/&gt;/>/g' -e 's/&quot;/"/g' -e "s/&#39;/'/g") || news=
+        fresh=()
+        while IFS=$'\t' read -r d t l; do
+            [[ -n $t ]] || continue
+            when=$(date -d "$d" +%s 2>/dev/null) || continue
+            ((when > since)) && fresh+=("$(date -d "@$when" +%Y-%m-%d)  $t"$'\n'"              $l")
+        done <<<"$news"
+        if ((${#fresh[@]})); then
+            note "Arch's news since your last update. It says when an update needs you to do"
+            note "something by hand; open the links to read it."
+            echo
+            printf '      %s\n' "${fresh[@]}"
+            read -rp $'\n    Update now? [Y/n] ' ok || ok=n
+            [[ $ok == [nN]* ]] && { note "Nothing was updated."; finish; exit 0; }
+        fi
+    fi
+
+    # 3. The keyring first, so packages signed by new keys are trusted; then
+    #    everything together. pacman lists what changes and asks before it does.
+    keyrings=(archlinux-keyring)
+    pacman -Q archlinuxarm-keyring >/dev/null 2>&1 && keyrings+=(archlinuxarm-keyring)
+    sudo pacman -Sy --needed --noconfirm "${keyrings[@]}"
+    sudo pacman -Su || die "the packages weren't updated. Run btw-update again to finish (don't install other" \
+        "packages first: on Arch, everything updates together)."
+    command -v git >/dev/null || sudo pacman -S --needed --noconfirm git
+fi
+
+# --- btw ----------------------------------------------------------------------------
+command -v git >/dev/null || die "git is missing (sudo pacman -S git)."
+step "Updating btw ($branch)"
+if [[ -d $src/.git ]]; then
     git -C "$src" fetch -q --depth 1 origin "$branch"
     git -C "$src" reset -q --hard FETCH_HEAD
 else
-    echo "Downloading btw ($branch)..."
     mkdir -p "$(dirname "$src")"
     git clone -q --depth 1 --branch "$branch" "$repo" "$src"
 fi
-echo "Version: $(git -C "$src" log -1 --format='%h %s')"
-exec bash "$src/install.sh"
+note "version: $(git -C "$src" log -1 --format='%h %s')"
+# The whole-system btw already has its apps, built into the system.
+opts=()
+[[ $whole_os == yes ]] && opts+=(--no-apps)
+bash "$src/install.sh" "${opts[@]}"
+
+mkdir -p "$state"
+date +%s >"$stamp"
+
+# --- afterwards ---------------------------------------------------------------------
+if [[ $whole_os == yes ]]; then
+    mapfile -t pacnew < <(find /etc -name '*.pacnew' 2>/dev/null | sort)
+    if ((${#pacnew[@]})); then
+        step "New config files from packages"
+        note "These packages came with new versions of config files you have, and kept"
+        note "yours. Compare them when you like (sudo pacdiff, from pacman-contrib):"
+        printf '      %s\n' "${pacnew[@]}"
+    fi
+    step "btw is up to date"
+    # The running kernel's modules go when its package is updated.
+    if [[ ! -d /usr/lib/modules/$(uname -r) ]]; then
+        note "The kernel was updated: restart to start using it."
+        read -rp $'\n    Restart now? [y/N] ' r || r=n
+        [[ $r == [yY]* ]] && systemctl reboot
+    fi
+else
+    step "btw is up to date"
+    note "Update the rest of your system the way you usually do (sudo pacman -Syu, omarchy-update, ...)."
+fi
+finish

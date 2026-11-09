@@ -15,7 +15,8 @@
   Steps:
     1. WSL: installs or updates it when needed (version 2.4.4 or newer),
     2. Arch Linux, from the official WSL image,
-    3. a Linux user named after yours, sudo, systemd,
+    3. a Linux user named after yours, sudo, systemd (btw's welcome terminal
+       has you choose the user's password; sudo asks for it),
     4. btw, with its normal installer (install.sh),
     5. the Start menu shortcut, then a check that btw can open.
 
@@ -213,9 +214,9 @@ function Install-Arch {
 
 function Install-LinuxSetup([string]$User) {
     Step "Setting up Arch Linux (user $User, sudo, systemd, base packages)"
-    # No password: in WSL, anything running as you on Windows can already be
-    # root in Linux (wsl -u root), so a sudo password would protect nothing
-    # and only be one more thing to type.
+    # sudo without a password only while this installer runs (btw's own
+    # installer uses sudo): Protect-LinuxSudo takes it away at the end, and
+    # btw's welcome terminal then has you choose a password.
     $r = Invoke-Linux -Show @"
 set -e
 # The official image leaves the package keys to be set up on first use.
@@ -223,9 +224,12 @@ pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
 pacman -Syu --noconfirm --needed sudo git curl
 id -u $User >/dev/null 2>&1 || useradd -m -G wheel -s /bin/bash $User
-passwd -d $User >/dev/null
-echo '$User ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/10-btw
-chmod 440 /etc/sudoers.d/10-btw
+# Named to sort after 10-btw: sudo goes by the last rule that matches. The
+# rule also ends by itself after two hours, in case this installer is closed
+# before it can take it away.
+echo "$User ALL=(ALL:ALL) NOTAFTER=`$(date -u -d '+2 hours' +%Y%m%d%H%M%SZ) NOPASSWD: ALL" > /etc/sudoers.d/zz-btw-install
+chmod 440 /etc/sudoers.d/zz-btw-install
+visudo -cf /etc/sudoers.d/zz-btw-install >/dev/null
 # Log in as $User by default, and run systemd (btw's session uses it).
 touch /etc/wsl.conf
 grep -q '^default=' /etc/wsl.conf || printf '\n[user]\ndefault=$User\n' >> /etc/wsl.conf
@@ -234,6 +238,29 @@ grep -q '^systemd=' /etc/wsl.conf || printf '\n[boot]\nsystemd=true\n' >> /etc/w
     if ($r.Code -ne 0) { Fail "setting up Arch Linux failed (see the log)." }
     # Restart the distribution so the default user and systemd take effect.
     Invoke-Native wsl.exe @("--terminate", $Distro) | Out-Null
+}
+
+# Ends sudo without a password: sudo asks for the user's password from here
+# on. A user with no password yet (a new install, or one from an older btw,
+# which had none) can't sudo or log in with one until they choose it: btw's
+# welcome terminal asks, through set-password, the one command sudo allows
+# without a password, and only until a password is chosen.
+function Protect-LinuxSudo([string]$User) {
+    $r = Invoke-Linux @"
+set -e
+rm -f /etc/sudoers.d/zz-btw-install
+cat > /etc/sudoers.d/10-btw <<'SUDOERS'
+%wheel ALL=(ALL:ALL) ALL
+$User ALL=(root) NOPASSWD: /usr/local/lib/btw/set-password ""
+SUDOERS
+chmod 440 /etc/sudoers.d/10-btw
+if [ "`$(passwd -S $User | cut -d' ' -f2)" != P ]; then
+    usermod -p '!' $User
+    install -d -m 755 /var/lib/btw
+    echo $User > /var/lib/btw/choose-password
+fi
+"@
+    return ($r.Code -eq 0)
 }
 
 function Install-BtwLinux([string]$User) {
@@ -286,8 +313,11 @@ function Install-Btw {
         $user = ($env:USERNAME.ToLower() -replace "[^a-z0-9_-]", "")
         if ($user -notmatch "^[a-z_][a-z0-9_-]{0,31}$") { $user = "btw" }
     }
+    $script:SudoOpenFor = $user
     Install-LinuxSetup $user
     Install-BtwLinux $user
+    if (-not (Protect-LinuxSudo $user)) { Fail "couldn't turn sudo's password back on (see the log)." }
+    $script:SudoOpenFor = $null
     Install-Shortcut
     Test-Btw $user
 
@@ -295,6 +325,7 @@ function Install-Btw {
     Note "Next time, open btw from the Start menu (search for btw)."
     Note "In its window, Alt does what the Windows key does in btw:"
     Note "  Alt+D apps, Alt+Enter terminal, Alt+Shift+E close."
+    Note "The first time, btw's terminal asks you to choose a password: sudo asks for it."
     Note "Update btw later: run this installer again, or btw update inside btw."
     Start-Process -FilePath $Shortcut
 }
@@ -322,4 +353,10 @@ try {
     Write-Host "btw: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "The full log is in $Log; it shows what went wrong." -ForegroundColor Red
     Log "FAILED: $($_.Exception.Message)"
+    # Never leave sudo without a password behind a failed install.
+    if ($script:SudoOpenFor) {
+        if (-not (Protect-LinuxSudo $script:SudoOpenFor)) {
+            Write-Host "sudo in Arch Linux may still work without a password; run this installer again to fix that." -ForegroundColor Red
+        }
+    }
 }

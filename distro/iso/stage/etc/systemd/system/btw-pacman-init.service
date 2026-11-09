@@ -1,0 +1,17 @@
+# pacman's signing keys, made on this PC the first time it starts (the live
+# USB makes new ones every start; an installed btw makes them once). They're
+# never shipped in the ISO: everyone's would be the same, and anyone could
+# sign packages that every btw trusts. Arch's own ISO does the same.
+[Unit]
+Description=Set up pacman's signing keys
+ConditionPathExists=!/etc/pacman.d/gnupg/trustdb.gpg
+Before=archlinux-keyring-wkd-sync.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/pacman-key --init
+ExecStart=/usr/bin/pacman-key --populate
+
+[Install]
+WantedBy=multi-user.target

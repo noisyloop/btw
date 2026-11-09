@@ -25,6 +25,10 @@ for bin in btw btw-session btw-bar btw-apps btw-launch btw-menu btw-open btw-upd
   put 755 "$src/rootfs/usr/local/bin/$bin" "/usr/local/bin/$bin"
 done
 
+# The first password of a btw that starts without one (the Mac VM, the live
+# USB, btw on Windows); it does nothing anywhere else.
+put 755 "$src/rootfs/usr/local/lib/btw/set-password" /usr/local/lib/btw/set-password
+
 conf=/usr/share/btw/config
 put 644 "$src/rootfs/etc/sway/config" "$conf/sway/config"
 put 644 "$src/rootfs/etc/xdg/waybar/config.jsonc" "$conf/waybar/config.jsonc"
