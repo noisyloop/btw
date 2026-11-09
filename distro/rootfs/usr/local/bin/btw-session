@@ -113,9 +113,24 @@ if [ -n "$foreground" ]; then
     exit
 fi
 
-# Full screen: Sway is the session, nothing to come back to.
+# Full screen: Sway is the session, nothing to come back to. If it fails
+# straight away on the GPU (VirtualBox's VMSVGA without 3D acceleration, for
+# one, has a render node that Sway can't draw with), start it again drawing on
+# the CPU instead of leaving a text console.
 if [ -z "${WAYLAND_DISPLAY:-}" ]; then
     header "$@" >"$log"
+    if [ -n "${WLR_RENDERER:-}" ]; then
+        exec sway "$@" --config "$config" >>"$log" 2>&1
+    fi
+    started=$(date +%s)
+    sway "$@" --config "$config" >>"$log" 2>&1
+    status=$?
+    [ $status -eq 0 ] && exit 0
+    [ $(($(date +%s) - started)) -lt 10 ] || exit $status
+    cp "$log" "$log.gpu"
+    export WLR_RENDERER=pixman WLR_NO_HARDWARE_CURSORS=1
+    header "$@" >"$log"
+    echo "  (the GPU didn't work: sway exited with status $status; see $log.gpu)" >>"$log"
     exec sway "$@" --config "$config" >>"$log" 2>&1
 fi
 
