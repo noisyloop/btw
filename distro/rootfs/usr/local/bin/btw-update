@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Updates btw. "Update btw" in the app menu runs it in a terminal.
+# Updates btw. Run it in a terminal.
 #
 #   btw-update              update everything (see below), with btw from main
 #   btw-update <branch>     the same, with btw from a branch, e.g. to try a pull
@@ -39,14 +39,14 @@ die() {
     finish
     exit 1
 }
-trap 'die "stopped with an error (line $LINENO). Run Update btw again to finish."' ERR
+trap 'die "stopped with an error (line $LINENO). Run btw-update again to finish."' ERR
 
 branch=main
 btw_only=no
 for arg in "$@"; do
     case $arg in
     --btw-only) btw_only=yes ;;
-    --pause) pause=yes ;; # from the app menu: keep the window open at the end
+    --pause) pause=yes ;; # keep a terminal window open at the end
     -h | --help)
         sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
         exit 0
@@ -68,7 +68,7 @@ whole_os=no
 [[ $btw_only == yes ]] && whole_os=no
 
 curl -fsI -m 15 https://github.com >/dev/null 2>&1 ||
-    die "no internet. Connect first (Wi-Fi in the app menu), then run Update btw again."
+    die "no internet. Connect first (Wi-Fi in the app menu), then run btw-update again."
 
 # --- the system's packages ----------------------------------------------------------
 if [[ $whole_os == yes ]]; then
@@ -127,7 +127,7 @@ if [[ $whole_os == yes ]]; then
     keyrings=(archlinux-keyring)
     pacman -Q archlinuxarm-keyring >/dev/null 2>&1 && keyrings+=(archlinuxarm-keyring)
     sudo pacman -Sy --needed --noconfirm "${keyrings[@]}"
-    sudo pacman -Su || die "the packages weren't updated. Run Update btw again to finish (don't install other" \
+    sudo pacman -Su || die "the packages weren't updated. Run btw-update again to finish (don't install other" \
         "packages first: on Arch, everything updates together)."
     command -v git >/dev/null || sudo pacman -S --needed --noconfirm git
 fi

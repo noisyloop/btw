@@ -201,8 +201,7 @@ btw-update
 It downloads the newest btw and installs it over the one you have (any new packages too).
 Here, next to your own desktop, it only updates btw; update the rest of your system the
 way you always do. (Where btw is the whole system, on a PC installed from the
-[ISO](#try-btw-on-a-pc), it updates every package too.) **Update btw** in the app menu
-runs it in a terminal.
+[ISO](#try-btw-on-a-pc), it updates every package too.)
 To try changes before they're merged, give it the branch of a pull request:
 
 ```sh
@@ -290,8 +289,8 @@ the btw desktop. To install btw to a disk, open **Install btw** from the app lau
 a password for the `btw` user and your time zone. Secure Boot has to be off for now.
 
 Once it's installed, btw is a normal Arch Linux system: `sudo pacman -S <package>`
-installs anything from Arch's repositories, and **Update btw** in the app menu (or
-`btw-update`) keeps it up to date. It updates Arch's keyring first, shows Arch's news
+installs anything from Arch's repositories, and `btw-update` in a terminal keeps it
+up to date. It updates Arch's keyring first, shows Arch's news
 since your last update (it says when an update needs you to do something by hand) and
 asks before it goes on, then updates every package together and then btw itself. At the
 end it lists config files that packages left as `.pacnew` and offers a restart if the
@@ -308,6 +307,27 @@ bash <(curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/distro/ro
 Each release's ISO is boot-tested in QEMU first (BIOS and UEFI live boots, then an
 install to a blank disk and a boot from it). It hasn't been tried on much real
 hardware yet, so if something doesn't work on your PC, please open an issue.
+
+### Try it in GNOME Boxes
+
+[GNOME Boxes](https://apps.gnome.org/Boxes/) is the easiest way to try the ISO (or test
+a new one) without a USB stick, on any Linux PC, even an old one. It's QEMU and KVM, the
+same as the boot test each release goes through.
+
+1. Install Boxes (`sudo pacman -S gnome-boxes` on Arch, `flatpak install flathub
+   org.gnome.Boxes` anywhere) and download `btw-x86_64.iso`.
+2. In Boxes: **+**, then **Install from File**, and pick the ISO. If it asks which system
+   it is, choose **Arch Linux**.
+3. Give it 4 GB of memory or more and a 20 GB disk, then **Create**. It boots into the
+   live btw desktop; **Install btw** in the app menu installs it to the box's disk.
+4. For the live fractal wallpaper, turn on **3D acceleration** in the box's preferences.
+   Without it the desktop still works, with a still picture.
+
+btw comes with Boxes too, so on a PC with btw installed you can run another btw (or any
+other system) in a window. It needs virtualization turned on in the PC's firmware
+(Intel VT-x or AMD-V), and Boxes inside a VM only works if that VM allows nested
+virtualization. On Windows, where Boxes doesn't run, VirtualBox or Hyper-V boot the ISO
+the same way (with EFI on).
 
 ## Requirements
 
