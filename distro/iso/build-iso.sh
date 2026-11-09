@@ -87,6 +87,7 @@ want() { # want <target> <unit> [<unit dir>]
 want multi-user.target NetworkManager.service
 want multi-user.target systemd-resolved.service
 want multi-user.target nftables.service
+want multi-user.target btw-pacman-init.service /etc/systemd/system
 want sysinit.target systemd-timesyncd.service
 ln -sf /usr/lib/systemd/system/NetworkManager-dispatcher.service \
   "$stage/etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Update btw
+Comment=Update btw and, where btw is the whole system, every package
+Exec=foot -T "Update btw" -e btw-update --pause
+Icon=system-software-update
+Categories=System;
+Keywords=update;upgrade;pacman;packages;

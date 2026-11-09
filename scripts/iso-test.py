@@ -206,6 +206,12 @@ if len(parts) == 3:
     check(not has("/usr/local/bin/btw-install"), "installer not left behind")
     check(has("/usr/local/bin/btw-session") and has("/usr/share/btw/shell/shell.qml"), "btw's files are there")
     check(not has("/etc/mkinitcpio.conf.d/archiso.conf"), "normal initramfs config")
+    # pacman works: a server to download from, and signing keys made on first
+    # start (never shipped: every PC's would be the same).
+    check(re.search(r"^Server\s*=", cat("/etc/pacman.d/mirrorlist"), re.M) is not None, "pacman has a mirror")
+    check(has("/etc/systemd/system/multi-user.target.wants/btw-pacman-init.service"), "pacman keys made on first start")
+    check(not has("/etc/pacman.d/gnupg/trustdb.gpg"), "no pacman keys shipped")
+    check(has("/usr/bin/git") and has("/usr/local/lib/btw/whole-os"), "Update btw can update everything")
     esp = parts[1]
     esp_img = os.path.join(WORK, "esp.img")
     subprocess.run(["dd", f"if={DISK}", f"of={esp_img}", "bs=512", f"skip={esp['start']}",

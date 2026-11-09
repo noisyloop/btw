@@ -161,6 +161,11 @@ if [[ $apps == yes ]]; then
 fi
 
 step "Done"
+# btw is the whole system (the PC ISO or the Mac VM): it's already your desktop.
+if [[ -f /usr/local/lib/btw/whole-os ]]; then
+  note "Log out and back in (app menu, Power) to use the new btw."
+  exit 0
+fi
 note "Try it in a window: open btw from your app menu (or run btw-session)."
 note "There it uses Alt instead of Super: Alt+Space apps, Alt+Enter terminal,"
 note "Alt+Shift+E closes it."

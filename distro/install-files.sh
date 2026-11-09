@@ -55,6 +55,7 @@ put 644 "$src/btw.desktop" /usr/share/wayland-sessions/btw.desktop
 # icon for it.
 put 644 "$src/btw-app.desktop" /usr/share/applications/btw.desktop
 put 644 "$src/btw-fractals.desktop" /usr/share/applications/btw-fractals.desktop
+put 644 "$src/btw-update.desktop" /usr/share/applications/btw-update.desktop
 # Music, btw's music player.
 for f in "$src"/music/*.qml; do
   put 644 "$f" "/usr/share/btw/music/$(basename "$f")"

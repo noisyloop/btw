@@ -199,6 +199,10 @@ btw-update
 ```
 
 It downloads the newest btw and installs it over the one you have (any new packages too).
+Here, next to your own desktop, it only updates btw; update the rest of your system the
+way you always do. (Where btw is the whole system, on a PC installed from the
+[ISO](#try-btw-on-a-pc), it updates every package too.) **Update btw** in the app menu
+runs it in a terminal.
 To try changes before they're merged, give it the branch of a pull request:
 
 ```sh
@@ -284,6 +288,22 @@ or use [Fedora Media Writer](https://github.com/FedoraQt/MediaWriter) or
 the btw desktop. To install btw to a disk, open **Install btw** from the app launcher
 (or run `sudo btw-install` in a terminal): it asks which disk to use (it's erased),
 a password for the `btw` user and your time zone. Secure Boot has to be off for now.
+
+Once it's installed, btw is a normal Arch Linux system: `sudo pacman -S <package>`
+installs anything from Arch's repositories, and **Update btw** in the app menu (or
+`btw-update`) keeps it up to date. It updates Arch's keyring first, shows Arch's news
+since your last update (it says when an update needs you to do something by hand) and
+asks before it goes on, then updates every package together and then btw itself. At the
+end it lists config files that packages left as `.pacnew` and offers a restart if the
+kernel changed. SSH logins stay off; `ssh` and `scp` work for reaching other machines.
+
+On a PC installed from the 0.3.1 ISO, pacman isn't set up yet (it has no signing keys
+and no download server). The newest `btw-update` fixes that and then updates
+everything, so run it once straight from GitHub:
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/noisyloop/btw/main/distro/rootfs/usr/local/bin/btw-update)
+```
 
 Each release's ISO is boot-tested in QEMU first (BIOS and UEFI live boots, then an
 install to a blank disk and a boot from it). It hasn't been tried on much real

@@ -19,6 +19,11 @@ arch-install-scripts
 dosfstools
 e2fsprogs
 
+# Updating btw (btw-update fetches it from GitHub) and keeping track of
+# config files that packages update (pacdiff).
+git
+pacman-contrib
+
 # Wired and Wi-Fi networking ("Wi-Fi" in the app menu is nmtui).
 networkmanager
 
