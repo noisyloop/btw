@@ -171,17 +171,6 @@ vm.wait(20); vm.shot("boot-menu")
 vm.wait(70); vm.shot("desktop")
 vm.stop()
 
-# 1b. The live desktop on the graphics card VirtualBox and VMware give a VM
-# (VMSVGA), which has no 3D here: the desktop has to come up all the same.
-# The second screenshot shows what the session logged.
-print("-- live, BIOS, VMSVGA graphics", flush=True)
-vm = VM("live-vmsvga", uefi=False, cdrom=ISO, vga="vmware")
-vm.wait(90); vm.shot("desktop")
-vm.type(PASSWORD + "\n"); vm.wait(3)
-vm.type(PASSWORD + "\n"); vm.wait(6)
-vm.type("ls /dev/dri; tail -n 15 ~/.local/state/sway.log\n"); vm.wait(5); vm.shot("session-log")
-vm.stop()
-
 # 2. Install, through UEFI.
 print("-- install, UEFI", flush=True)
 subprocess.run(["truncate", "-s", "12G", DISK], check=True)

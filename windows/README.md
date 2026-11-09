@@ -65,7 +65,7 @@ your Windows files are under `/mnt/c`, and `btw` opens btw's tools and apps (`bt
 ## Update
 
 Run the install command again. It skips what's done and installs the newest btw over the
-old one. To try a pull request before it's merged, set the branch first:
+old one. (`btw update` inside btw does the same for btw alone, and asks for your password.) To try a pull request before it's merged, set the branch first:
 
 ```powershell
 $env:BTW_BRANCH = "claude/sway-desktop-roadmap-q7kb2y"
